@@ -114,7 +114,7 @@
     // ===== FETCH APPS =====
     async function fetchApps() {
       try {
-        const res = await fetch(API_URL + '?action=getApps');
+        const res = await fetch(API_URL + '?action=getApps&light=true');
         const data = await res.json();
         if (data.ok) { apps = data.apps; renderApps(); }
         else showToast('Failed to fetch apps: ' + data.error, 'error');
@@ -279,9 +279,16 @@
     }
 
     // ===== EDIT =====
-    function editApp(id) {
-      const app = apps.find(a => a.id === id);
-      if (app) openModal(app);
+    async function editApp(id) {
+      // Fetch full app data (with icon) since light=true omits icons
+      try {
+        const res = await fetch(API_URL + '?action=getApp&id=' + id);
+        const data = await res.json();
+        if (data.ok) openModal(data.app);
+        else showToast('Failed to load app details.', 'error');
+      } catch (err) {
+        showToast('Failed to load app details.', 'error');
+      }
     }
 
     // ===== DELETE =====
