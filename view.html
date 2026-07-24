@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Loading...</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
+  <style>
+    .view-loading {
+      display: flex; align-items: center; justify-content: center;
+      height: 100vh; color: var(--text-muted);
+      flex-direction: column; gap: 16px;
+    }
+    .view-loading .spinner {
+      width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--primary); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .view-error {
+      display: flex; align-items: center; justify-content: center;
+      height: 100vh; color: var(--danger); flex-direction: column; gap: 12px;
+      text-align: center; padding: 20px;
+    }
+    .view-error h2 { font-size: 24px; }
+    .view-error p { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="view-container">
+    <div id="viewContent">
+      <div class="view-loading">
+        <div class="spinner"></div>
+        <span>Loading PWA...</span>
+      </div>
+    </div>
+    <nav class="bottom-nav" id="bottomNav"></nav>
+  </div>
+
+  <script>
+    // ===== GET APP ID FROM URL =====
+    const params = new URLSearchParams(window.location.search);
+    const appId = params.get('id');
+
+    if (!appId) {
+      document.getElementById('viewContent').innerHTML =
+        '<div class="view-error"><h2>Missing ID</h2><p>No app ID provided. Use ?id=YOUR_APP_ID</p></div>';
+    } else {
+      loadApp(appId);
+    }
+
+    async function loadApp(id) {
+      try {
+        const res = await fetch(API_URL + '?action=getApp&id=' + encodeURIComponent(id));
+        const data = await res.json();
+
+        if (!data.ok) {
+          showError('App Not Found', 'The requested PWA does not exist or has been deleted.');
+          return;
+        }
+
+        const app = data.app;
+        const isActive = app.active === 'true' || app.active === true;
+
+        if (!isActive) {
+          showError('App Disabled', 'This PWA is currently inactive.');
+          return;
+        }
+
+        // Set page title
+        document.title = app.app_name || 'PWA Viewer';
+
+        // Show iframe
+        document.getElementById('viewContent').innerHTML =
+          '<iframe class="view-iframe" src="' + encodeURIAttr(app.app_url) + '" sandbox="allow-scripts allow-forms allow-same-origin allow-popups" allow="geolocation; microphone; camera"></iframe>';
+
+        // Build bottom nav (only visible on mobile via CSS)
+        const nav = document.getElementById('bottomNav');
+        const buttons = (app.buttons && app.buttons.length) ? app.buttons : [];
+
+        if (buttons.length === 0 || !buttons.some(b => b.url || b.icon)) {
+          nav.style.display = 'none';
+          return;
+        }
+
+        let navHtml = '';
+        buttons.forEach((btn, i) => {
+          if (!btn.url) return;
+          const icon = btn.icon || '●';
+          const name = btn.name || 'Button ' + (i + 1);
+          navHtml += '<a href="' + encodeURIAttr(btn.url) + '" class="nav-btn" ' +
+            (i === 0 ? ' id="defaultNavBtn"' : '') +
+            ' target="viewFrame" onclick="navigateTo(event, this)">' +
+            '<span class="nav-icon">' + icon + '</span>' +
+            '<span>' + escapeHtml(name) + '</span>' +
+          '</a>';
+        });
+        nav.innerHTML = navHtml;
+
+        // Load default URL in iframe
+        const defaultUrl = buttons[0] && buttons[0].url ? buttons[0].url : app.app_url;
+        setTimeout(() => {
+          const iframe = document.querySelector('.view-iframe');
+          if (iframe && buttons[0] && buttons[0].url) {
+            iframe.src = buttons[0].url;
+          }
+        }, 100);
+
+      } catch (err) {
+        showError('Connection Error', 'Failed to load PWA data. Is the API running?');
+      }
+    }
+
+    function navigateTo(e, el) {
+      e.preventDefault();
+      const url = el.getAttribute('href');
+      const iframe = document.querySelector('.view-iframe');
+      if (iframe && url) {
+        iframe.src = url;
+      }
+      // Update active state
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function showError(title, msg) {
+      document.getElementById('viewContent').innerHTML =
+        '<div class="view-error"><h2>' + escapeHtml(title) + '</h2><p>' + escapeHtml(msg) + '</p></div>';
+      document.getElementById('bottomNav').style.display = 'none';
+    }
+
+    function encodeURIAttr(str) {
+      if (!str) return '';
+      return str.replace(/"/g, '%22').replace(/'/g, '%27');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+  </script>
+</body>
+</html>

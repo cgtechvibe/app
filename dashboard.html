@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PWA Manager - Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>My PWAs</h2>
+      <span class="user-badge" id="userBadge"></span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="openModal()">+ Add New App</button>
+      <button class="btn btn-outline btn-sm" onclick="handleLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- PWA List -->
+    <div id="pwaList"></div>
+  </div>
+
+  <!-- Modal Overlay -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2 id="modalTitle">Add New PWA</h2>
+      <form id="pwaForm" onsubmit="handleSave(event)">
+        <input type="hidden" id="editId" value="">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Owner *</label>
+            <input type="text" class="form-input" id="owner" required placeholder="e.g. Ahmad">
+          </div>
+          <div class="form-group">
+            <label>Tel *</label>
+            <input type="text" class="form-input" id="tel" required placeholder="e.g. 0123456789">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" class="form-input" id="email" required placeholder="owner@email.com">
+          </div>
+          <div class="form-group">
+            <label>WebApp Name *</label>
+            <input type="text" class="form-input" id="app_name" required placeholder="e.g. MyStore">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>WebApp Icon URL</label>
+            <input type="url" class="form-input" id="app_icon" placeholder="https://example.com/icon.png">
+          </div>
+          <div class="form-group">
+            <label>WebApp URL *</label>
+            <input type="url" class="form-input" id="app_url" required placeholder="https://example.com">
+          </div>
+        </div>
+
+        <!-- Toggle -->
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="active" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span>App is active</span>
+        </div>
+
+        <!-- 5 Buttons Config -->
+        <div class="buttons-section">
+          <h3>Bottom Navigation Buttons (Mobile Only)</h3>
+          <div id="buttonsContainer"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ===== AUTH CHECK =====
+    const userData = JSON.parse(localStorage.getItem('pwa_user') || 'null');
+    if (!userData) { window.location.href = 'index.html'; }
+    document.getElementById('userBadge').textContent = userData.name + ' (' + userData.email + ')';
+
+    // ===== STATE =====
+    let apps = [];
+    let editingId = null;
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', () => {
+      generateButtonConfigs();
+      fetchApps();
+    });
+
+    // ===== FETCH APPS =====
+    async function fetchApps() {
+      try {
+        const res = await fetch(API_URL + '?action=getApps');
+        const data = await res.json();
+        if (data.ok) { apps = data.apps; renderApps(); }
+        else showToast('Failed to fetch apps: ' + data.error, 'error');
+      } catch (err) {
+        showToast('Connection error. Is the API running?', 'error');
+        document.getElementById('pwaList').innerHTML = '<div class="empty-state"><h3>Connection Error</h3><p>Cannot reach the API server.</p></div>';
+      }
+    }
+
+    // ===== RENDER APPS =====
+    function renderApps() {
+      const container = document.getElementById('pwaList');
+      if (!apps.length) {
+        container.innerHTML = '<div class="empty-state"><h3>No PWAs yet</h3><p>Click "+ Add New App" to create your first PWA wrapper.</p></div>';
+        return;
+      }
+
+      container.innerHTML = '<div class="pwa-grid">' + apps.map(app => {
+        const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '') + '/view.html?id=' + app.id;
+        const isActive = app.active === 'true' || app.active === true;
+        return '<div class="pwa-card">' +
+          '<div class="pwa-info">' +
+            '<div class="pwa-icon">' + (app.app_icon ? '<img src="' + escapeHtml(app.app_icon) + '" alt="" onerror="this.parentElement.innerHTML=\'📱\'">' : '📱') + '</div>' +
+            '<div>' +
+              '<div class="pwa-name"><span class="pwa-status ' + (isActive ? 'on' : 'off') + '"></span>' + escapeHtml(app.app_name) + '</div>' +
+              '<div class="pwa-meta">' + escapeHtml(app.owner || '') + ' &middot; ' + escapeHtml(app.tel || '') + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="pwa-actions">' +
+            '<button class="btn btn-outline btn-sm" onclick="copyLink(\'' + app.id + '\')" title="Copy Link">📋 Copy Link</button>' +
+            '<a href="' + escapeHtml(app.app_url) + '" target="_blank" class="btn btn-outline btn-sm" title="Open Website">🌐 Open</a>' +
+            '<a href="view.html?id=' + app.id + '" target="_blank" class="btn btn-primary btn-sm" title="View Wrapper">👁️ View</a>' +
+            '<button class="btn btn-outline btn-sm" onclick="editApp(\'' + app.id + '\')" title="Edit">✏️</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="deleteApp(\'' + app.id + '\')" title="Delete">🗑️</button>' +
+          '</div>' +
+        '</div>';
+      }).join('') + '</div>';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ===== COPY LINK =====
+    function copyLink(id) {
+      const url = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '') + '/view.html?id=' + id;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copied!', 'success');
+      }).catch(() => {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = url; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+        showToast('Link copied!', 'success');
+      });
+    }
+
+    // ===== MODAL =====
+    function openModal(appData) {
+      editingId = appData ? appData.id : null;
+      document.getElementById('editId').value = appData ? appData.id : '';
+      document.getElementById('modalTitle').textContent = appData ? 'Edit PWA' : 'Add New PWA';
+      document.getElementById('owner').value = appData ? (appData.owner || '') : '';
+      document.getElementById('tel').value = appData ? (appData.tel || '') : '';
+      document.getElementById('email').value = appData ? (appData.email || '') : '';
+      document.getElementById('app_name').value = appData ? (appData.app_name || '') : '';
+      document.getElementById('app_icon').value = appData ? (appData.app_icon || '') : '';
+      document.getElementById('app_url').value = appData ? (appData.app_url || '') : '';
+      document.getElementById('active').checked = appData ? (appData.active === 'true' || appData.active === true) : true;
+
+      // Load buttons
+      const btns = (appData && appData.buttons) ? appData.buttons : [{},{},{},{},{}];
+      for (let i = 0; i < 5; i++) {
+        document.getElementById('b_icon_' + i).value = btns[i] ? (btns[i].icon || '') : '';
+        document.getElementById('b_url_' + i).value = btns[i] ? (btns[i].url || '') : '';
+        document.getElementById('b_name_' + i).value = btns[i] ? (btns[i].name || '') : '';
+      }
+
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    // Close on overlay click
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // ===== SAVE =====
+    async function handleSave(e) {
+      e.preventDefault();
+      const editId = document.getElementById('editId').value;
+      const buttons = [];
+      for (let i = 0; i < 5; i++) {
+        buttons.push({
+          icon: document.getElementById('b_icon_' + i).value,
+          url: document.getElementById('b_url_' + i).value,
+          name: document.getElementById('b_name_' + i).value
+        });
+      }
+
+      const payload = {
+        action: editId ? 'updateApp' : 'createApp',
+        owner: document.getElementById('owner').value,
+        tel: document.getElementById('tel').value,
+        email: document.getElementById('email').value,
+        app_name: document.getElementById('app_name').value,
+        app_icon: document.getElementById('app_icon').value,
+        app_url: document.getElementById('app_url').value,
+        active: document.getElementById('active').checked ? 'true' : 'false',
+        buttons: buttons
+      };
+      if (editId) payload.id = editId;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast(editId ? 'PWA updated!' : 'PWA created!', 'success');
+          closeModal();
+          fetchApps();
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('Failed to save. Check connection.', 'error');
+      }
+    }
+
+    // ===== EDIT =====
+    function editApp(id) {
+      const app = apps.find(a => a.id === id);
+      if (app) openModal(app);
+    }
+
+    // ===== DELETE =====
+    async function deleteApp(id) {
+      if (!confirm('Delete this PWA? This cannot be undone.')) return;
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'deleteApp', id: id })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast('PWA deleted!', 'success');
+          fetchApps();
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('Failed to delete.', 'error');
+      }
+    }
+
+    // ===== LOGOUT =====
+    function handleLogout() {
+      localStorage.removeItem('pwa_user');
+      window.location.href = 'index.html';
+    }
+
+    // ===== GENERATE BUTTON CONFIGS =====
+    function generateButtonConfigs() {
+      const container = document.getElementById('buttonsContainer');
+      let html = '';
+      for (let i = 0; i < 5; i++) {
+        html += '<details class="button-config">' +
+          '<summary>Button ' + (i + 1) + (i === 0 ? ' (default)' : '') + '</summary>' +
+          '<div class="button-grid">' +
+            '<div class="form-group"><label>Icon (emoji/URL)</label><input type="text" class="form-input" id="b_icon_' + i + '" placeholder="e.g. 🏠 or icon URL"></div>' +
+            '<div class="form-group"><label>URL</label><input type="url" class="form-input" id="b_url_' + i + '" placeholder="https://..."></div>' +
+            '<div class="form-group"><label>Name (optional)</label><input type="text" class="form-input" id="b_name_' + i + '" placeholder="e.g. Home"></div>' +
+          '</div>' +
+        '</details>';
+      }
+      container.innerHTML = html;
+    }
+
+    // ===== TOAST =====
+    function showToast(msg, type) {
+      const t = document.createElement('div');
+      t.className = 'toast ' + type;
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+    }
+  </script>
+</body>
+</html>
