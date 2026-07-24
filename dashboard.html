@@ -310,6 +310,30 @@
       window.location.href = 'index.html';
     }
 
+    // ===== IMAGE RESIZE UTILITY =====
+    function resizeImage(file, maxSize, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          let w = img.width, h = img.height;
+          if (w > maxSize || h > maxSize) {
+            const ratio = Math.min(maxSize / w, maxSize / h);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          // JPEG at 80% quality - jauh lebih kecil dari PNG
+          callback(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
     // ===== GENERATE BUTTON CONFIGS =====
     function generateButtonConfigs() {
       const container = document.getElementById('buttonsContainer');
@@ -330,21 +354,17 @@
       }
       container.innerHTML = html;
 
-      // Attach file change events for button icons
       container.querySelectorAll('.b_icon_file').forEach(input => {
         input.addEventListener('change', function(e) {
           const file = e.target.files[0];
           if (!file) return;
-          if (file.size > 100 * 1024) { showToast('Icon too large. Max 100KB.', 'error'); this.value = ''; return; }
           const idx = this.dataset.idx;
-          const reader = new FileReader();
-          reader.onload = function(ev) {
+          resizeImage(file, 64, function(dataUrl) {
             const preview = document.querySelector('.b_icon_preview[data-idx="' + idx + '"]');
-            preview.querySelector('img').src = ev.target.result;
+            preview.querySelector('img').src = dataUrl;
             preview.style.display = 'block';
             document.querySelector('.b_icon_url[data-idx="' + idx + '"]').value = '';
-          };
-          reader.readAsDataURL(file);
+          });
         });
       });
 
@@ -363,26 +383,17 @@
       });
     }
 
-    // ===== ICON UPLOAD =====
+    // ===== ICON UPLOAD (Main App Icon) =====
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('app_icon_file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
-        // Max 100KB
-        if (file.size > 100 * 1024) {
-          showToast('Icon too large. Max 100KB.', 'error');
-          this.value = '';
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = function(ev) {
+        resizeImage(file, 128, function(dataUrl) {
           const preview = document.getElementById('previewImg');
-          preview.src = ev.target.result;
+          preview.src = dataUrl;
           document.getElementById('iconPreview').style.display = 'block';
-          // Clear URL input since file takes priority
           document.getElementById('app_icon_url').value = '';
-        };
-        reader.readAsDataURL(file);
+        });
       });
 
       document.getElementById('app_icon_url').addEventListener('input', function() {
