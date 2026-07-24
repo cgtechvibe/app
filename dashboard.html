@@ -196,7 +196,20 @@
       // Load buttons
       const btns = (appData && appData.buttons) ? appData.buttons : [{},{},{},{},{}];
       for (let i = 0; i < 5; i++) {
-        document.getElementById('b_icon_' + i).value = btns[i] ? (btns[i].icon || '') : '';
+        // Reset button icons (file+url)
+        const fileInput = document.querySelector('.b_icon_file[data-idx="' + i + '"]');
+        const urlInput = document.querySelector('.b_icon_url[data-idx="' + i + '"]');
+        const preview = document.querySelector('.b_icon_preview[data-idx="' + i + '"]');
+        if (fileInput) fileInput.value = '';
+        if (urlInput) urlInput.value = btns[i] ? (btns[i].icon || '') : '';
+        if (preview) {
+          if (btns[i] && btns[i].icon) {
+            preview.querySelector('img').src = btns[i].icon;
+            preview.style.display = 'block';
+          } else {
+            preview.style.display = 'none';
+          }
+        }
         document.getElementById('b_url_' + i).value = btns[i] ? (btns[i].url || '') : '';
         document.getElementById('b_name_' + i).value = btns[i] ? (btns[i].name || '') : '';
       }
@@ -219,8 +232,16 @@
       const editId = document.getElementById('editId').value;
       const buttons = [];
       for (let i = 0; i < 5; i++) {
+        const fileInput = document.querySelector('.b_icon_file[data-idx="' + i + '"]');
+        const urlInput = document.querySelector('.b_icon_url[data-idx="' + i + '"]');
+        const preview = document.querySelector('.b_icon_preview[data-idx="' + i + '"]');
+        let iconVal = urlInput ? urlInput.value : '';
+        // File takes priority
+        if (fileInput && fileInput.files && fileInput.files[0] && preview) {
+          iconVal = preview.querySelector('img').src || iconVal;
+        }
         buttons.push({
-          icon: document.getElementById('b_icon_' + i).value,
+          icon: iconVal,
           url: document.getElementById('b_url_' + i).value,
           name: document.getElementById('b_name_' + i).value
         });
@@ -297,13 +318,49 @@
         html += '<details class="button-config">' +
           '<summary>Button ' + (i + 1) + (i === 0 ? ' (default)' : '') + '</summary>' +
           '<div class="button-grid">' +
-            '<div class="form-group"><label>Icon (emoji/URL)</label><input type="text" class="form-input" id="b_icon_' + i + '" placeholder="e.g. 🏠 or icon URL"></div>' +
+            '<div class="form-group"><label>Icon</label>' +
+              '<input type="file" class="form-input b_icon_file" data-idx="' + i + '" accept="image/*" style="margin-bottom:4px;font-size:12px;">' +
+              '<input type="text" class="form-input b_icon_url" data-idx="' + i + '" placeholder="Or emoji/URL" style="font-size:13px;">' +
+              '<div class="b_icon_preview" data-idx="' + i + '" style="margin-top:4px;display:none;"><img style="width:32px;height:32px;border-radius:6px;object-fit:cover;border:1px solid var(--border);"></div>' +
+            '</div>' +
             '<div class="form-group"><label>URL</label><input type="url" class="form-input" id="b_url_' + i + '" placeholder="https://..."></div>' +
             '<div class="form-group"><label>Name (optional)</label><input type="text" class="form-input" id="b_name_' + i + '" placeholder="e.g. Home"></div>' +
           '</div>' +
         '</details>';
       }
       container.innerHTML = html;
+
+      // Attach file change events for button icons
+      container.querySelectorAll('.b_icon_file').forEach(input => {
+        input.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (!file) return;
+          if (file.size > 100 * 1024) { showToast('Icon too large. Max 100KB.', 'error'); this.value = ''; return; }
+          const idx = this.dataset.idx;
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            const preview = document.querySelector('.b_icon_preview[data-idx="' + idx + '"]');
+            preview.querySelector('img').src = ev.target.result;
+            preview.style.display = 'block';
+            document.querySelector('.b_icon_url[data-idx="' + idx + '"]').value = '';
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
+      container.querySelectorAll('.b_icon_url').forEach(input => {
+        input.addEventListener('input', function() {
+          const idx = this.dataset.idx;
+          document.querySelector('.b_icon_file[data-idx="' + idx + '"]').value = '';
+          const preview = document.querySelector('.b_icon_preview[data-idx="' + idx + '"]');
+          if (this.value) {
+            preview.querySelector('img').src = this.value;
+            preview.style.display = 'block';
+          } else {
+            preview.style.display = 'none';
+          }
+        });
+      });
     }
 
     // ===== ICON UPLOAD =====
