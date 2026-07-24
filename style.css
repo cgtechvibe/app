@@ -173,7 +173,14 @@ body {
 .nav-btn:hover, .nav-btn.active { color: var(--primary); }
 .nav-btn .nav-icon { font-size: 22px; line-height: 1; }
 
-/* ===== TOAST ===== */
+.form-input[type="file"] {
+  padding: 8px; font-size: 13px; color-scheme: dark;
+}
+.form-input[type="file"]::file-selector-button {
+  background: var(--primary); color: white; border: none;
+  padding: 4px 12px; border-radius: 4px; cursor: pointer;
+  margin-right: 8px; font-size: 12px;
+}
 .toast {
   position: fixed; bottom: 20px; right: 20px; z-index: 9999;
   padding: 12px 24px; border-radius: 8px; color: white; font-size: 14px;
