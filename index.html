@@ -1,0 +1,206 @@
+<!-- =========================================================
+     FAIL 1: INDEX.HTML (TERAS UTAMA WRAPPER & NAVIGASI)
+     PANDUAN PENGGUNAAN: 
+     1. Scroll ke bawah dan cari "BAHAGIAN 2: CONFIGURATION".
+     2. Edit senarai menu (icon, nama, URL) di bahagian tersebut.
+     3. Bahagian CSS dan Logik tidak perlu disentuh.
+     ========================================================= -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>My Business App</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121212">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <style>
+        /* =========================================================
+           BAHAGIAN 1: CSS (TIDAK PERLU DIEDIT KECUALI NAK TUKAR WARNA)
+           ========================================================= */
+        :root {
+            --nav-bg: #1e1e1e;
+            --nav-border: #333333;
+            --text-normal: #888888;
+            --text-active: #ffffff;
+            --indicator: #007bff;
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #121212;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #iframe-container {
+            flex-grow: 1;
+            width: 100%;
+            position: relative;
+        }
+        
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: var(--nav-bg);
+            border-top: 1px solid var(--nav-border);
+            height: 65px;
+            padding-bottom: env(safe-area-inset-bottom);
+            flex-shrink: 0;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-normal);
+            text-decoration: none;
+            cursor: pointer;
+            height: 100%;
+            transition: color 0.2s ease;
+        }
+
+        .nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+        }
+
+        .nav-text {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .nav-item.active {
+            color: var(--text-active);
+        }
+
+        @media (min-width: 769px), (orientation: landscape) {
+            .bottom-nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="iframe-container">
+        <iframe id="gas-frame" allow="camera; microphone; geolocation"></iframe>
+    </div>
+    <div class="bottom-nav" id="bottom-nav"></div>
+
+    <script>
+        /* =========================================================
+           BAHAGIAN 2: CONFIGURATION (EDIT DI SINI UNTUK SETIAP PROJEK)
+           PANDUAN: Gantikan pautan GAS WebApp anda di 'defaultUrl' 
+           dan di dalam senarai 'menus' di bawah.
+           ========================================================= */
+        
+        const appConfig = {
+            // URL yang akan dibuka secara automatik apabila PWA dilancarkan
+            defaultUrl: "https://script.google.com/macros/s/AKfycbzyPkIA5UXaL41sF0RJPjdGMdUAiKutSoTseTEhrKecjw0qZN01pPZyaIRWB83d2dHg/exec",
+            
+            // Maksimum 5 Menu (Guna link gambar ATAU emoji pada icon)
+            menus: [
+                {
+                    id: "menu-1",
+                    name: "Home",
+                    icon: "🏚️", 
+                    url: "https://script.google.com/macros/s/AKfycbzyPkIA5UXaL41sF0RJPjdGMdUAiKutSoTseTEhrKecjw0qZN01pPZyaIRWB83d2dHg/exec"
+                },
+                {
+                    id: "menu-2",
+                    name: "FamTree",
+                    icon: "🌳", 
+                    url: "https://script.google.com/macros/s/AKfycbzyPkIA5UXaL41sF0RJPjdGMdUAiKutSoTseTEhrKecjw0qZN01pPZyaIRWB83d2dHg/exec?view=publictree"
+                },
+                {
+                    id: "menu-3",
+                    name: "Bulletin",
+                    icon: "📔", 
+                    url: "https://script.google.com/macros/s/AKfycbzyPkIA5UXaL41sF0RJPjdGMdUAiKutSoTseTEhrKecjw0qZN01pPZyaIRWB83d2dHg/exec?view=bulletin"
+                },
+                {
+                    id: "menu-4",
+                    name: "calendar",
+                    icon: "📆", 
+                    url: "https://script.google.com/macros/s/AKfycbzyPkIA5UXaL41sF0RJPjdGMdUAiKutSoTseTEhrKecjw0qZN01pPZyaIRWB83d2dHg/exec?view=calendar"
+                },
+            ]
+        };
+
+        /* =========================================================
+           BAHAGIAN 3: SYSTEM LOGIC (TIDAK PERLU DIEDIT)
+           ========================================================= */
+
+        const renderNavigation = () => {
+            try {
+                const navContainer = document.getElementById('bottom-nav');
+                const iframe = document.getElementById('gas-frame');
+                
+                iframe.src = appConfig.defaultUrl;
+
+                appConfig.menus.forEach((menu, index) => {
+                    const navBtn = document.createElement('div');
+                    navBtn.className = `nav-item ${index === 0 ? 'active' : ''}`;
+                    navBtn.id = menu.id;
+                    
+                    const isImg = menu.icon.startsWith('http') || menu.icon.startsWith('./');
+                    const iconDisplay = isImg 
+                        ? `<img src="${menu.icon}" alt="${menu.name}" style="width:24px;height:24px;border-radius:4px;">` 
+                        : menu.icon;
+
+                    navBtn.innerHTML = `
+                        <div class="nav-icon">${iconDisplay}</div>
+                        <div class="nav-text">${menu.name}</div>
+                    `;
+
+                    navBtn.onclick = () => {
+                        iframe.src = menu.url;
+                        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                        navBtn.classList.add('active');
+                    };
+
+                    navContainer.appendChild(navBtn);
+                });
+            } catch (error) {
+                console.error("Navigation render error: ", error);
+            }
+        };
+
+        const registerSW = async () => {
+            if ('serviceWorker' in navigator) {
+                try {
+                    await navigator.serviceWorker.register('sw.js');
+                } catch (error) {
+                    console.error('SW Failed:', error);
+                }
+            }
+        };
+
+        window.onload = () => {
+            renderNavigation();
+            registerSW();
+        };
+    </script>
+</body>
+</html>
