@@ -48,7 +48,7 @@
         /* ===== FLOATING GLASS BOTTOM NAV (Threads-style) ===== */
         .bottom-nav {
             position: fixed;
-            bottom: 16px;
+            bottom: 24px;
             left: 16px;
             right: 16px;
             height: 68px;
@@ -123,17 +123,52 @@
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .nav-item.active .nav-icon svg {
-            transform: scale(1.08);
             filter: drop-shadow(0 2px 8px rgba(59,130,246,0.3));
         }
         .nav-item:active .nav-icon svg { transform: scale(0.88); }
         .nav-item.active:active .nav-icon svg { transform: scale(0.95); }
+
+        /* Threads-style aggressive bounce animation */
+        @keyframes threadBounce {
+            0%   { transform: scale(1) rotate(0deg); }
+            20%  { transform: scale(1.35) rotate(-3deg); }
+            40%  { transform: scale(0.88) rotate(2deg); }
+            55%  { transform: scale(1.12) rotate(-1deg); }
+            70%  { transform: scale(0.96) rotate(0deg); }
+            85%  { transform: scale(1.04) rotate(0deg); }
+            100% { transform: scale(1.08) rotate(0deg); }
+        }
+        @keyframes threadFloat {
+            0%   { transform: translateY(-3px) scale(1.02); filter: brightness(1); }
+            50%  { transform: translateY(-5px) scale(1.04); filter: brightness(1.2); }
+            100% { transform: translateY(-3px) scale(1.02); filter: brightness(1); }
+        }
+
+        .nav-item.bounce .nav-icon svg {
+            animation: threadBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .nav-item.active .nav-icon svg {
+            transform: scale(1.08);
+            filter: drop-shadow(0 2px 8px rgba(59,130,246,0.3));
+        }
+        /* Pulse float on active */
+        .nav-item.active {
+            animation: threadFloat 2.5s ease-in-out infinite;
+        }
 
         .nav-text {
             font-size: 10px; font-weight: 500; letter-spacing: 0.2px;
             transition: all 0.35s ease; opacity: 0.6; line-height: 1.2;
         }
         .nav-item.active .nav-text { opacity: 1; font-weight: 600; }
+        .nav-item.bounce .nav-text {
+            animation: textFade 0.4s ease forwards;
+        }
+        @keyframes textFade {
+            0%   { opacity: 0.4; transform: translateY(4px); }
+            60%  { opacity: 1; transform: translateY(-1px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
 
         /* Sembunyi kat desktop/landscape */
         @media (min-width: 769px), (orientation: landscape) {
@@ -198,12 +233,16 @@
                     return function() {
                         var all = document.querySelectorAll('.nav-item');
                         for (var j = 0; j < all.length; j++) {
-                            all[j].classList.remove('active');
+                            all[j].classList.remove('active', 'bounce');
                             all[j].setAttribute('aria-selected', 'false');
                         }
                         this.classList.add('active');
+                        this.classList.add('bounce');
                         this.setAttribute('aria-selected', 'true');
                         if (frame.src !== url) { frame.src = url; }
+                        // Remove bounce class after animation ends so it can replay
+                        var self = this;
+                        setTimeout(function() { self.classList.remove('bounce'); }, 700);
                     };
                 })(menu.url);
 
