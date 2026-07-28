@@ -10,6 +10,8 @@
     <title>My Business App</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f0f1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon-192.png">
     
     <style>
@@ -48,10 +50,10 @@
         /* ===== FLOATING GLASS BOTTOM NAV (Threads-style) ===== */
         .bottom-nav {
             position: fixed;
-            bottom: 8px;
+            bottom: max(8px, env(safe-area-inset-bottom, 8px));
             left: 16px;
             right: 16px;
-            height: 68px;
+            height: 64px;
             display: flex;
             justify-content: space-around;
             align-items: center;
