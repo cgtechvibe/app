@@ -205,21 +205,90 @@
         };
 
         /* =========================================================
-           SESSION TOKEN — localStorage PWA (stabil di mobile)
+           INDEXEDDB — Persistent token storage (iOS PWA fallback)
+           localStorage boleh clear bila iOS PWA standby lama.
+           IndexedDB lebih stabil, guna sebagai backup.
+           ========================================================= */
+        var IDB_NAME = 'FamTreePWA';
+        var IDB_STORE = 'tokens';
+        var IDB_KEY = 'ft_token';
+
+        function idbOpen() {
+            return new Promise(function(resolve, reject) {
+                var req = indexedDB.open(IDB_NAME, 1);
+                req.onupgradeneeded = function(e) {
+                    var db = e.target.result;
+                    if (!db.objectStoreNames.contains(IDB_STORE)) {
+                        db.createObjectStore(IDB_STORE);
+                    }
+                };
+                req.onsuccess = function(e) { resolve(e.target.result); };
+                req.onerror = function(e) { reject(e.target.error); };
+            });
+        }
+
+        function idbSaveToken(token) {
+            idbOpen().then(function(db) {
+                var tx = db.transaction(IDB_STORE, 'readwrite');
+                tx.objectStore(IDB_STORE).put(token, IDB_KEY);
+                tx.oncomplete = function() { db.close(); };
+            }).catch(function(){});
+        }
+
+        function idbGetToken() {
+            return new Promise(function(resolve) {
+                idbOpen().then(function(db) {
+                    var tx = db.transaction(IDB_STORE, 'readonly');
+                    var req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+                    req.onsuccess = function() { resolve(req.result); db.close(); };
+                    req.onerror = function() { resolve(null); db.close(); };
+                }).catch(function() { resolve(null); });
+            });
+        }
+
+        function idbClearToken() {
+            idbOpen().then(function(db) {
+                var tx = db.transaction(IDB_STORE, 'readwrite');
+                tx.objectStore(IDB_STORE).delete(IDB_KEY);
+                tx.oncomplete = function() { db.close(); };
+            }).catch(function(){});
+        }
+
+        /* =========================================================
+           SESSION TOKEN — Multi-layer storage (localStorage + IndexedDB)
            ========================================================= */
 
-        // Dengar postMessage dari GAS iframe (token save/clear)
+        // Dengar postMessage dari GAS iframe (token save/clear/request)
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'ft_token') {
                 if (event.data.action === 'save' && event.data.token) {
                     try { localStorage.setItem('ft_token', event.data.token); } catch(e) {}
+                    idbSaveToken(event.data.token); // Backup ke IndexedDB
                 } else if (event.data.action === 'clear') {
                     try { localStorage.removeItem('ft_token'); } catch(e) {}
+                    idbClearToken(); // Padam dari IndexedDB
+                } else if (event.data.action === 'request') {
+                    // GAS iframe minta token — check localStorage dulu, then IndexedDB
+                    var tok = null;
+                    try { tok = localStorage.getItem('ft_token'); } catch(e) {}
+                    if (tok) {
+                        event.source.postMessage({type: 'ft_token', action: 'restore', token: tok}, '*');
+                    } else {
+                        idbGetToken().then(function(idbTok) {
+                            if (idbTok) {
+                                try { localStorage.setItem('ft_token', idbTok); } catch(e) {}
+                                event.source.postMessage({type: 'ft_token', action: 'restore', token: idbTok}, '*');
+                            } else {
+                                event.source.postMessage({type: 'ft_token', action: 'restore', token: null}, '*');
+                            }
+                        });
+                    }
                 }
             }
         });
 
-        // Baca token dari localStorage, return URL dengan ?st= appended
+        // Baca token, return URL dengan ?st= appended
+        // Priority: localStorage > IndexedDB fallback
         function getTokenUrl(baseUrl) {
             var token = null;
             try { token = localStorage.getItem('ft_token'); } catch(e) {}
@@ -272,8 +341,36 @@
             }
         }
 
+        // Fallback: if localStorage empty, recover token from IndexedDB async
+        function recoverTokenAsync(callback) {
+            var existingToken = null;
+            try { existingToken = localStorage.getItem('ft_token'); } catch(e) {}
+            if (existingToken) { callback(existingToken); return; }
+            idbGetToken().then(function(idbTok) {
+                if (idbTok) {
+                    try { localStorage.setItem('ft_token', idbTok); } catch(e) {}
+                }
+                callback(idbTok || null);
+            });
+        }
+
         window.onload = function() {
             renderNavigation();
+
+            // Async: recover token from IndexedDB if localStorage was cleared
+            // Then update iframe.src if it's still on the base URL
+            setTimeout(function() {
+                recoverTokenAsync(function(token) {
+                    if (token) {
+                        var frame = document.getElementById('gas-frame');
+                        if (frame && frame.src.indexOf('?st=') === -1) {
+                            var sep = frame.src.indexOf('?') === -1 ? '?' : '&';
+                            frame.src = frame.src + sep + 'st=' + encodeURIComponent(token);
+                        }
+                    }
+                });
+            }, 100); // Delay to let page settle, avoid race with initial load
+
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('sw.js').catch(function(){});
             }
