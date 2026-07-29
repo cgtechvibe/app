@@ -1,5 +1,5 @@
 ﻿<!-- =========================================================
-     PWA WRAPPER 2.0 — REDESIGNED BOTTOM NAV + SESSION TOKEN
+     PWA WRAPPER 2.0 — SHELL (bottom nav moved to GAS)
      ========================================================= -->
 
 <!DOCTYPE html>
@@ -13,176 +13,22 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon-192.png">
-    
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --nav-bg: #0f0f1a;
-            --nav-border: rgba(255,255,255,0.06);
-            --text-muted: rgba(255,255,255,0.35);
-            --text-active: #60a5fa;
-            --indicator: #3b82f6;
-            --indicator-glow: rgba(59,130,246,0.3);
-            --nav-height: 72px;
-            --safe-bottom: env(safe-area-inset-bottom, 0px);
-        }
-        
         html, body {
             width: 100%; height: 100%; margin: 0; padding: 0;
             background: transparent;
             overflow: hidden;
             font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
         }
-
-        /* ===== IFRAME (full screen, content shows behind floating nav) ===== */
-        #iframe-container { 
+        #iframe-container {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: transparent;
         }
         #iframe-container iframe {
             border: none; width: 100%; height: 100%; display: block;
             background: transparent;
-        }
-
-        /* ===== FLOATING GLASS BOTTOM NAV (Threads-style) ===== */
-        .bottom-nav {
-            position: fixed;
-            bottom: max(8px, env(safe-area-inset-bottom, 8px));
-            left: 16px;
-            right: 16px;
-            height: 64px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 0 6px;
-            background: rgba(18, 18, 28, 0.72);
-            backdrop-filter: blur(24px) saturate(1.2);
-            -webkit-backdrop-filter: blur(24px) saturate(1.2);
-            border-radius: 34px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 
-                0 8px 40px rgba(0, 0, 0, 0.5),
-                0 2px 12px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.04);
-            z-index: 100;
-            margin-bottom: 0;
-        }
-        @supports not (backdrop-filter: blur(1px)) {
-            .bottom-nav { background: rgba(18, 18, 28, 0.95); }
-        }
-
-        /* Nav-items: content layer di atas indicator */
-        .nav-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 52px;
-            gap: 2px;
-            color: var(--text-muted);
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            font-family: inherit;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-            border-radius: 26px;
-            transition: color 0.4s ease;
-            position: relative;
-            z-index: 2;
-        }
-
-        .nav-item.active {
-            color: var(--text-active);
-        }
-
-        /* ===== SLIDING INDICATOR PILL ===== */
-        .nav-indicator {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            height: 52px;
-            border-radius: 26px;
-            background: rgba(59, 130, 246, 0.12);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 0.5px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 
-                0 8px 24px rgba(59, 130, 246, 0.15),
-                0 2px 8px rgba(59, 130, 246, 0.08),
-                inset 0 1px 0 rgba(255, 255, 255, 0.06);
-            transform: translateY(-50%);
-            pointer-events: none;
-            z-index: 1;
-            /* Smooth slide — slower, with bounce overshoot */
-            transition: 
-                left 0.55s cubic-bezier(0.2, 1.4, 0.6, 1),
-                width 0.55s cubic-bezier(0.18, 1.6, 0.6, 1);
-        }
-        @supports not (backdrop-filter: blur(1px)) {
-            .nav-indicator { background: rgba(59, 130, 246, 0.18); }
-        }
-        /* Travel pulse: mengembang sedikit ketika bergerak */
-        .nav-indicator.moving {
-            animation: travelPulse 0.55s ease forwards;
-        }
-        @keyframes travelPulse {
-            0%   { transform: translateY(-50%) scaleX(1) scaleY(1); }
-            35%  { transform: translateY(-50%) scaleX(1.12) scaleY(1.06); }
-            65%  { transform: translateY(-50%) scaleX(0.94) scaleY(0.98); }
-            100% { transform: translateY(-50%) scaleX(1) scaleY(1); }
-        }
-
-        .nav-icon {
-            width: 26px; height: 26px;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            will-change: transform;
-        }
-        .nav-icon svg {
-            width: 24px; height: 24px; display: block;
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .nav-item.active .nav-icon svg {
-            filter: drop-shadow(0 2px 8px rgba(59,130,246,0.3));
-        }
-        .nav-item:active .nav-icon svg { transform: scale(0.88); }
-        .nav-item.active:active .nav-icon svg { transform: scale(0.95); }
-
-        @keyframes threadBounce {
-            0%   { transform: scale(1) rotate(0deg); }
-            20%  { transform: scale(1.35) rotate(-3deg); }
-            40%  { transform: scale(0.88) rotate(2deg); }
-            55%  { transform: scale(1.12) rotate(-1deg); }
-            70%  { transform: scale(0.96) rotate(0deg); }
-            85%  { transform: scale(1.04) rotate(0deg); }
-            100% { transform: scale(1.08) rotate(0deg); }
-        }
-
-        .nav-item.bounce .nav-icon svg {
-            animation: threadBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        .nav-text {
-            font-size: 10px; font-weight: 500; letter-spacing: 0.2px;
-            transition: all 0.35s ease; opacity: 0.6; line-height: 1.2;
-        }
-        .nav-item.active .nav-text { opacity: 1; font-weight: 600; }
-        .nav-item.bounce .nav-text {
-            animation: textFade 0.4s ease forwards;
-        }
-        @keyframes textFade {
-            0%   { opacity: 0.4; transform: translateY(4px); }
-            60%  { opacity: 1; transform: translateY(-1px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Sembunyi kat desktop/landscape */
-        @media (min-width: 769px), (orientation: landscape) {
-            .bottom-nav { display: none; }
         }
     </style>
 </head>
@@ -192,38 +38,15 @@
         <iframe id="gas-frame" allow="camera; microphone; geolocation"></iframe>
     </div>
 
-    <div class="bottom-nav" id="bottom-nav" role="tablist"></div>
-
     <script>
         /* =========================================================
-           CONFIGURATION — Edit di sini
+           CONFIGURATION
            ========================================================= */
 
-        // SVG outline icons
-        var ICONS = {
-            home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>',
-            people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
-            megaphone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>',
-            calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
-            star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
-        };
-
-        var GAS_BASE = "https://script.google.com/macros/s/AKfycbyNzbPX3TfsBILk3aw6gCxiZnVMTGoliqMCAI0dbLLRUBzcmM4sUytVVoYYsMBoGxZn/exec";
-
-        var appConfig = {
-            defaultUrl: GAS_BASE,
-            menus: [
-                { id: "menu-1", name: "Home",     icon: ICONS.home,      url: GAS_BASE },
-                { id: "menu-2", name: "FamTree",  icon: ICONS.people,    url: GAS_BASE + "?view=publictree" },
-                { id: "menu-3", name: "Bulletin", icon: ICONS.megaphone, url: GAS_BASE + "?view=bulletin" },
-                { id: "menu-4", name: "Calendar", icon: ICONS.calendar,  url: GAS_BASE + "?view=calendar" }
-            ]
-        };
+        var GAS_BASE = "https://script.google.com/macros/s/AKfycbwK7Pz7qhoTBBHWXKKz2DGJKwciwtIiAoDN16ynts7NvYj1X9In6JKMU1I7Qye4Zc-c/exec";
 
         /* =========================================================
            INDEXEDDB — Persistent token storage (iOS PWA fallback)
-           localStorage boleh clear bila iOS PWA standby lama.
-           IndexedDB lebih stabil, guna sebagai backup.
            ========================================================= */
         var IDB_NAME = 'FamTreePWA';
         var IDB_STORE = 'tokens';
@@ -274,17 +97,15 @@
            SESSION TOKEN — Multi-layer storage (localStorage + IndexedDB)
            ========================================================= */
 
-        // Dengar postMessage dari GAS iframe (token save/clear/request)
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'ft_token') {
                 if (event.data.action === 'save' && event.data.token) {
                     try { localStorage.setItem('ft_token', event.data.token); } catch(e) {}
-                    idbSaveToken(event.data.token); // Backup ke IndexedDB
+                    idbSaveToken(event.data.token);
                 } else if (event.data.action === 'clear') {
                     try { localStorage.removeItem('ft_token'); } catch(e) {}
-                    idbClearToken(); // Padam dari IndexedDB
+                    idbClearToken();
                 } else if (event.data.action === 'request') {
-                    // GAS iframe minta token — check localStorage dulu, then IndexedDB
                     var tok = null;
                     try { tok = localStorage.getItem('ft_token'); } catch(e) {}
                     if (tok) {
@@ -303,8 +124,6 @@
             }
         });
 
-        // Baca token, return URL dengan ?st= appended
-        // Priority: localStorage > IndexedDB fallback
         function getTokenUrl(baseUrl) {
             var token = null;
             try { token = localStorage.getItem('ft_token'); } catch(e) {}
@@ -313,76 +132,6 @@
             return baseUrl + separator + 'st=' + encodeURIComponent(token);
         }
 
-        /* =========================================================
-           SYSTEM LOGIC — Jangan edit
-           ========================================================= */
-
-        function renderNavigation() {
-            var nav = document.getElementById('bottom-nav');
-            var frame = document.getElementById('gas-frame');
-            if (!nav || !frame) return;
-
-            // Set initial URL with token (if any)
-            frame.src = getTokenUrl(appConfig.defaultUrl);
-
-            // Create sliding indicator — insert before buttons supaya z-index betul
-            var indicator = document.createElement('div');
-            indicator.className = 'nav-indicator';
-            nav.appendChild(indicator);
-
-            function moveIndicator(target) {
-                var navRect = nav.getBoundingClientRect();
-                var targetRect = target.getBoundingClientRect();
-                indicator.style.width = targetRect.width + 'px';
-                indicator.style.left = (targetRect.left - navRect.left) + 'px';
-            }
-
-            for (var i = 0; i < appConfig.menus.length; i++) {
-                var menu = appConfig.menus[i];
-                var btn = document.createElement('button');
-                btn.className = 'nav-item' + (i === 0 ? ' active' : '');
-                btn.id = menu.id;
-                btn.setAttribute('role', 'tab');
-                btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
-
-                btn.innerHTML = '<div class="nav-icon">' + menu.icon + '</div><div class="nav-text">' + menu.name + '</div>';
-
-                btn.onclick = (function(url, element) {
-                    return function() {
-                        var all = document.querySelectorAll('.nav-item');
-                        for (var j = 0; j < all.length; j++) {
-                            all[j].classList.remove('active', 'bounce');
-                            all[j].setAttribute('aria-selected', 'false');
-                        }
-                        element.classList.add('active');
-                        element.classList.add('bounce');
-                        element.setAttribute('aria-selected', 'true');
-                        // Append token to URL before setting iframe src
-                        var tokenUrl = getTokenUrl(url);
-                        if (frame.src !== tokenUrl) { frame.src = tokenUrl; }
-                        var selfEl = element;
-                        setTimeout(function() { selfEl.classList.remove('bounce'); }, 700);
-
-                        // Slide indicator ke button ini
-                        indicator.classList.add('moving');
-                        moveIndicator(element);
-                        // Lepas animation siap, buang class moving
-                        setTimeout(function() { indicator.classList.remove('moving'); }, 600);
-                    };
-                })(menu.url, btn);
-
-                nav.appendChild(btn);
-            }
-
-            // Position indicator pada active button (yang pertama)
-            var firstActive = nav.querySelector('.nav-item.active');
-            if (firstActive) {
-                // Tunggu layout settle sikit
-                setTimeout(function() { moveIndicator(firstActive); }, 50);
-            }
-        }
-
-        // Fallback: if localStorage empty, recover token from IndexedDB async
         function recoverTokenAsync(callback) {
             var existingToken = null;
             try { existingToken = localStorage.getItem('ft_token'); } catch(e) {}
@@ -396,21 +145,20 @@
         }
 
         window.onload = function() {
-            renderNavigation();
+            var frame = document.getElementById('gas-frame');
+            if (frame) {
+                frame.src = getTokenUrl(GAS_BASE);
+            }
 
-            // Async: recover token from IndexedDB if localStorage was cleared
-            // Then update iframe.src if it's still on the base URL
+            // Async recover token from IndexedDB if localStorage was cleared
             setTimeout(function() {
                 recoverTokenAsync(function(token) {
-                    if (token) {
-                        var frame = document.getElementById('gas-frame');
-                        if (frame && frame.src.indexOf('?st=') === -1) {
-                            var sep = frame.src.indexOf('?') === -1 ? '?' : '&';
-                            frame.src = frame.src + sep + 'st=' + encodeURIComponent(token);
-                        }
+                    if (token && frame && frame.src.indexOf('?st=') === -1) {
+                        var sep = frame.src.indexOf('?') === -1 ? '?' : '&';
+                        frame.src = frame.src + sep + 'st=' + encodeURIComponent(token);
                     }
                 });
-            }, 100); // Delay to let page settle, avoid race with initial load
+            }, 100);
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('sw.js').catch(function(){});
