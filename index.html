@@ -1,169 +1,45 @@
-﻿<!-- =========================================================
-     PWA WRAPPER 2.0 — SHELL (bottom nav moved to GAS)
-     ========================================================= -->
-
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>My Business App</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f0f1a">
+    <meta name="theme-color" content="#121212">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon-192.png">
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
-            width: 100%; height: 100%; margin: 0; padding: 0;
-            background: transparent;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background: #121212;
         }
-        #iframe-container {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: transparent;
+        #app {
+            position: fixed;
+            inset: 0;
         }
-        #iframe-container iframe {
-            border: none; width: 100%; height: 100%; display: block;
-            background: transparent;
+        #app iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
         }
     </style>
 </head>
 <body>
-
-    <div id="iframe-container">
-        <iframe id="gas-frame" allow="camera; microphone; geolocation"></iframe>
+    <div id="app">
+        <iframe id="frame" src="https://script.google.com/macros/s/AKfycbzDZie5ILnuSmJ0Z-XUQ8QLgvVabw8jv7O-HmJCkNYw32ISj1BmFqSthy0Dj_uZe9I/exec" allow="camera; microphone; geolocation"></iframe>
     </div>
-
     <script>
-        /* =========================================================
-           CONFIGURATION
-           ========================================================= */
-
-        var GAS_BASE = "https://script.google.com/macros/s/AKfycbzDZie5ILnuSmJ0Z-XUQ8QLgvVabw8jv7O-HmJCkNYw32ISj1BmFqSthy0Dj_uZe9I/exec";
-
-        /* =========================================================
-           INDEXEDDB — Persistent token storage (iOS PWA fallback)
-           ========================================================= */
-        var IDB_NAME = 'FamTreePWA';
-        var IDB_STORE = 'tokens';
-        var IDB_KEY = 'ft_token';
-
-        function idbOpen() {
-            return new Promise(function(resolve, reject) {
-                var req = indexedDB.open(IDB_NAME, 1);
-                req.onupgradeneeded = function(e) {
-                    var db = e.target.result;
-                    if (!db.objectStoreNames.contains(IDB_STORE)) {
-                        db.createObjectStore(IDB_STORE);
-                    }
-                };
-                req.onsuccess = function(e) { resolve(e.target.result); };
-                req.onerror = function(e) { reject(e.target.error); };
-            });
-        }
-
-        function idbSaveToken(token) {
-            idbOpen().then(function(db) {
-                var tx = db.transaction(IDB_STORE, 'readwrite');
-                tx.objectStore(IDB_STORE).put(token, IDB_KEY);
-                tx.oncomplete = function() { db.close(); };
-            }).catch(function(){});
-        }
-
-        function idbGetToken() {
-            return new Promise(function(resolve) {
-                idbOpen().then(function(db) {
-                    var tx = db.transaction(IDB_STORE, 'readonly');
-                    var req = tx.objectStore(IDB_STORE).get(IDB_KEY);
-                    req.onsuccess = function() { resolve(req.result); db.close(); };
-                    req.onerror = function() { resolve(null); db.close(); };
-                }).catch(function() { resolve(null); });
-            });
-        }
-
-        function idbClearToken() {
-            idbOpen().then(function(db) {
-                var tx = db.transaction(IDB_STORE, 'readwrite');
-                tx.objectStore(IDB_STORE).delete(IDB_KEY);
-                tx.oncomplete = function() { db.close(); };
-            }).catch(function(){});
-        }
-
-        /* =========================================================
-           SESSION TOKEN — Multi-layer storage (localStorage + IndexedDB)
-           ========================================================= */
-
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'ft_token') {
-                if (event.data.action === 'save' && event.data.token) {
-                    try { localStorage.setItem('ft_token', event.data.token); } catch(e) {}
-                    idbSaveToken(event.data.token);
-                } else if (event.data.action === 'clear') {
-                    try { localStorage.removeItem('ft_token'); } catch(e) {}
-                    idbClearToken();
-                } else if (event.data.action === 'request') {
-                    var tok = null;
-                    try { tok = localStorage.getItem('ft_token'); } catch(e) {}
-                    if (tok) {
-                        event.source.postMessage({type: 'ft_token', action: 'restore', token: tok}, '*');
-                    } else {
-                        idbGetToken().then(function(idbTok) {
-                            if (idbTok) {
-                                try { localStorage.setItem('ft_token', idbTok); } catch(e) {}
-                                event.source.postMessage({type: 'ft_token', action: 'restore', token: idbTok}, '*');
-                            } else {
-                                event.source.postMessage({type: 'ft_token', action: 'restore', token: null}, '*');
-                            }
-                        });
-                    }
-                }
+        window.addEventListener('load', function () {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(function () {});
             }
         });
-
-        function getTokenUrl(baseUrl) {
-            var token = null;
-            try { token = localStorage.getItem('ft_token'); } catch(e) {}
-            if (!token) return baseUrl;
-            var separator = baseUrl.indexOf('?') === -1 ? '?' : '&';
-            return baseUrl + separator + 'st=' + encodeURIComponent(token);
-        }
-
-        function recoverTokenAsync(callback) {
-            var existingToken = null;
-            try { existingToken = localStorage.getItem('ft_token'); } catch(e) {}
-            if (existingToken) { callback(existingToken); return; }
-            idbGetToken().then(function(idbTok) {
-                if (idbTok) {
-                    try { localStorage.setItem('ft_token', idbTok); } catch(e) {}
-                }
-                callback(idbTok || null);
-            });
-        }
-
-        window.onload = function() {
-            var frame = document.getElementById('gas-frame');
-            if (frame) {
-                frame.src = getTokenUrl(GAS_BASE);
-            }
-
-            // Async recover token from IndexedDB if localStorage was cleared
-            setTimeout(function() {
-                recoverTokenAsync(function(token) {
-                    if (token && frame && frame.src.indexOf('?st=') === -1) {
-                        var sep = frame.src.indexOf('?') === -1 ? '?' : '&';
-                        frame.src = frame.src + sep + 'st=' + encodeURIComponent(token);
-                    }
-                });
-            }, 100);
-
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js').catch(function(){});
-            }
-        };
     </script>
 </body>
 </html>

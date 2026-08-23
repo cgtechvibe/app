@@ -1,9 +1,9 @@
 {
-  "_PANDUAN_EDIT_": "FAIL JSON TIDAK BOLEH ADA SIMBOL KOMEN (//). HANYA EDIT BARIS name, short_name, DAN description SAHAJA.",
-  "name": "My Client App",
+  "name": "My Business App",
   "short_name": "App",
-  "description": "Custom Wrapper with Native Bottom Navigation",
+  "description": "Standalone PWA wrapper",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#121212",
@@ -13,13 +13,19 @@
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
