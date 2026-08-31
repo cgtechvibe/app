@@ -1,7 +1,7 @@
 {
-  "name": "My Business App",
+  "name": "FamTree",
   "short_name": "App",
-  "description": "Standalone PWA wrapper",
+  "description": "Family Tree WebApp",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
