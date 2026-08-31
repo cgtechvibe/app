@@ -2,44 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Business App</title>
-    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Launcher</title>
     <meta name="theme-color" content="#121212">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="icon-192.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
             width: 100%;
             height: 100%;
-            overflow: hidden;
             background: #121212;
+            color: #e0e0e0;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        #app {
-            position: fixed;
-            inset: 0;
-        }
-        #app iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
+        .msg { text-align: center; font-size: 15px; opacity: 0.8; padding: 20px; }
     </style>
 </head>
 <body>
-    <div id="app">
-        <iframe id="frame" src="https://script.google.com/macros/s/AKfycby6kAWln7xxajIZTT4hzDEXa44eZ9n21kygGQTq5ASCvcviSaj5GdiTzmxflbsFHiIF/exec" allow="camera; microphone; geolocation"></iframe>
-    </div>
+    <div class="msg">Opening app…</div>
     <script>
-        window.addEventListener('load', function () {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js').catch(function () {});
-            }
-        });
+        (function () {
+            var target = '/PWA/client1/';
+            // Jika list.json ada, arahkan ke client pertama yang aktif
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'list.json', false);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data && data.clients && data.clients.length) {
+                            var first = data.clients[0];
+                            if (first && first.path) {
+                                target = '/' + first.path + '/';
+                            }
+                        }
+                    }
+                };
+                xhr.send(null);
+            } catch (e) {}
+            window.location.replace(target);
+        })();
     </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
-  "name": "FamTree",
+  "name": "My App",
   "short_name": "App",
-  "description": "Family Tree WebApp",
+  "description": "PWA wrapper",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
