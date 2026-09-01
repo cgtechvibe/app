@@ -2,49 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PWA Launcher</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Olla Apps</title>
     <meta name="theme-color" content="#121212">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
-            width: 100%;
-            height: 100%;
             background: #121212;
             color: #e0e0e0;
             font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-height: 100%;
         }
-        .msg { text-align: center; font-size: 15px; opacity: 0.8; padding: 20px; }
+        body {
+            background: radial-gradient(1200px 600px at 50% -100px, #1c1c28 0%, #121212 60%);
+            padding: max(28px, env(safe-area-inset-top)) 20px 48px;
+        }
+        .header { text-align: center; margin-bottom: 32px; }
+        .header h1 {
+            font-size: 28px; font-weight: 700; letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #fff, #9a9ab0);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .header p { margin-top: 6px; color: #888; font-size: 14px; }
+        .grid {
+            max-width: 420px; margin: 0 auto;
+            display: grid; grid-template-columns: 1fr; gap: 14px;
+        }
+        .card {
+            display: flex; align-items: center; gap: 16px;
+            background: #1e1e2a; border: 1px solid #2c2c3a;
+            border-radius: 16px; padding: 14px 16px;
+            text-decoration: none; color: inherit;
+            transition: transform .12s ease, border-color .12s ease, background .12s ease;
+        }
+        .card:hover { transform: translateY(-2px); border-color: #3d3d52; background: #242436; }
+        .card:active { transform: translateY(0); }
+        .thumb {
+            width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0;
+            object-fit: cover; background: #2a2a3a;
+        }
+        .meta { flex: 1; min-width: 0; }
+        .meta .name { font-size: 17px; font-weight: 600; }
+        .meta .desc { font-size: 13px; color: #8a8aa0; margin-top: 3px; }
+        .arrow { color: #6c6c84; font-size: 20px; flex-shrink: 0; }
+        .note { text-align: center; margin-top: 40px; color: #555; font-size: 12.5px; }
     </style>
 </head>
 <body>
-    <div class="msg">Opening app…</div>
+    <div class="header">
+        <h1>Olla Apps</h1>
+        <p>Pilih sistem untuk dibuka</p>
+    </div>
+    <div class="grid" id="list"></div>
+    <div class="note">Tiada sistem? Hubungi pentadbir.</div>
+
     <script>
         (function () {
-            // Base = direktori tempat index.html ni hidup (cth /famtree/ atau /PWA/)
             var base = location.pathname.replace(/\/[^\/]*$/, '/');
-            // Default: client pertama, fallback gunakan path dari list.json
-            var target = base + 'alpha/';
+            var grid = document.getElementById('list');
+
             try {
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', base + 'list.json', false);
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === 4 && xhr.status === 200) {
                         var data = JSON.parse(xhr.responseText);
-                        if (data && data.clients && data.clients.length) {
-                            var first = data.clients[0];
-                            if (first && first.path) {
-                                target = base + first.path + '/';
-                            }
+                        var clients = (data && data.clients) || [];
+
+                        if (!clients.length) {
+                            grid.innerHTML = '<div class="card"><div class="meta"><div class="desc">Tiada sistem di daftar.</div></div></div>';
+                            return;
                         }
+
+                        var html = '';
+                        clients.forEach(function (c) {
+                            var href = base + c.path + '/';
+                            var icon = c.icon
+                                ? (c.icon.indexOf('http') === 0 ? c.icon : base + c.icon.replace(/^\.?\//, ''))
+                                : base + 'icon-192.png';
+                            html +=
+                                '<a class="card" href="' + href + '">' +
+                                    '<img class="thumb" src="' + icon + '" alt="' + (c.name || '') + '">' +
+                                    '<div class="meta">' +
+                                        '<div class="name">' + (c.name || 'App') + '</div>' +
+                                        '<div class="desc">' + (c.description || '') + '</div>' +
+                                    '</div>' +
+                                    '<div class="arrow">›</div>' +
+                                '</a>';
+                        });
+                        grid.innerHTML = html;
                     }
                 };
                 xhr.send(null);
-            } catch (e) {}
-            window.location.replace(target);
+            } catch (e) {
+                grid.innerHTML = '<div class="card"><div class="meta"><div class="desc">Ralat memuat senarai.</div></div></div>';
+            }
         })();
     </script>
 </body>
