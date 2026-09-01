@@ -46,57 +46,62 @@
         .meta .desc { font-size: 13px; color: #8a8aa0; margin-top: 3px; }
         .arrow { color: #6c6c84; font-size: 20px; flex-shrink: 0; }
         .note { text-align: center; margin-top: 40px; color: #555; font-size: 12.5px; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Olla Apps</h1>
-        <p>Pilih sistem untuk dibuka</p>
+        <h1 id="menuTitle">Olla Apps</h1>
+        <p id="menuSubtitle">Memuatkan…</p>
     </div>
     <div class="grid" id="list"></div>
-    <div class="note">Tiada sistem? Hubungi pentadbir.</div>
+    <div class="note" id="note">Tiada sistem? Hubungi pentadbir.</div>
 
     <script>
         (function () {
             var base = location.pathname.replace(/\/[^\/]*$/, '/');
+            var titleEl = document.getElementById('menuTitle');
+            var subEl = document.getElementById('menuSubtitle');
             var grid = document.getElementById('list');
 
-            try {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', base + 'list.json', false);
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        var data = JSON.parse(xhr.responseText);
-                        var clients = (data && data.clients) || [];
+            // Cache-buster: sentiasa dapat list.json versi terkini (Pages serve max-age=600)
+            fetch(base + 'list.json?_t=' + Date.now())
+                .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                .then(function (data) {
+                    var title = (data && data.menuTitle) || 'Olla Apps';
+                    var subtitle = (data && data.menuSubtitle) || 'Pilih sistem untuk dibuka';
+                    if (titleEl) { titleEl.textContent = title; document.title = title; }
+                    if (subEl) subEl.textContent = subtitle;
 
-                        if (!clients.length) {
-                            grid.innerHTML = '<div class="card"><div class="meta"><div class="desc">Tiada sistem di daftar.</div></div></div>';
-                            return;
-                        }
+                    var clients = ((data && data.clients) || []).filter(function (c) { return c.visible !== false; });
 
-                        var html = '';
-                        clients.forEach(function (c) {
-                            var href = base + c.path + '/';
-                            var icon = c.icon
-                                ? (c.icon.indexOf('http') === 0 ? c.icon : base + c.icon.replace(/^\.?\//, ''))
-                                : base + 'icon-192.png';
-                            html +=
-                                '<a class="card" href="' + href + '">' +
-                                    '<img class="thumb" src="' + icon + '" alt="' + (c.name || '') + '">' +
-                                    '<div class="meta">' +
-                                        '<div class="name">' + (c.name || 'App') + '</div>' +
-                                        '<div class="desc">' + (c.description || '') + '</div>' +
-                                    '</div>' +
-                                    '<div class="arrow">›</div>' +
-                                '</a>';
-                        });
-                        grid.innerHTML = html;
+                    if (!clients.length) {
+                        grid.innerHTML = '<div class="card"><div class="meta"><div class="desc">Tiada sistem di daftar.</div></div></div>';
+                        return;
                     }
-                };
-                xhr.send(null);
-            } catch (e) {
-                grid.innerHTML = '<div class="card"><div class="meta"><div class="desc">Ralat memuat senarai.</div></div></div>';
-            }
+
+                    var html = '';
+                    clients.forEach(function (c) {
+                        var href = base + c.path + '/';
+                        var icon = c.icon
+                            ? (c.icon.indexOf('http') === 0 ? c.icon : base + c.icon.replace(/^\.?\//, ''))
+                            : base + 'icon-192.png';
+                        html +=
+                            '<a class="card" href="' + href + '">' +
+                                '<img class="thumb" src="' + icon + '" alt="' + (c.name || '') + '">' +
+                                '<div class="meta">' +
+                                    '<div class="name">' + (c.name || 'App') + '</div>' +
+                                    '<div class="desc">' + (c.description || '') + '</div>' +
+                                '</div>' +
+                                '<div class="arrow">›</div>' +
+                            '</a>';
+                    });
+                    grid.innerHTML = html;
+                })
+                .catch(function () {
+                    subEl.textContent = 'Ralat memuat senarai.';
+                    grid.innerHTML = '<div class="card"><div class="meta"><div class="desc">Ralat memuat senarai.</div></div></div>';
+                });
         })();
     </script>
 </body>
