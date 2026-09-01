@@ -24,18 +24,20 @@
     <div class="msg">Opening app…</div>
     <script>
         (function () {
-            var target = '/PWA/client1/';
-            // Jika list.json ada, arahkan ke client pertama yang aktif
+            // Base = direktori tempat index.html ni hidup (cth /famtree/ atau /PWA/)
+            var base = location.pathname.replace(/\/[^\/]*$/, '/');
+            // Default: client pertama, fallback gunakan path dari list.json
+            var target = base + 'client1/';
             try {
                 var xhr = new XMLHttpRequest();
-                xhr.open('GET', 'list.json', false);
+                xhr.open('GET', base + 'list.json', false);
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === 4 && xhr.status === 200) {
                         var data = JSON.parse(xhr.responseText);
                         if (data && data.clients && data.clients.length) {
                             var first = data.clients[0];
                             if (first && first.path) {
-                                target = '/' + first.path + '/';
+                                target = base + first.path + '/';
                             }
                         }
                     }
