@@ -1,4 +1,7 @@
-const CACHE_NAME = 'pwa-wrapper-v1';
+// CARA GUNA: bila duplicate _template -> clientN, tukar __CACHE_VERSION__
+// (cth v1 -> v2) SETIAP KALI anda ubah index.html/manifest supaya pengguna
+// dapat versi baru tanpa cache lama.
+const CACHE_NAME = 'pwa-wrapper-__CACHE_VERSION__';
 const ASSETS = [
     './',
     './index.html',

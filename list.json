@@ -1,8 +1,8 @@
 {
   "clients": [
     {
-      "id": "client1",
-      "path": "client1",
+      "id": "alpha",
+      "path": "alpha",
       "name": "FamTree",
       "url": "https://script.google.com/macros/s/AKfycby6kAWln7xxajIZTT4hzDEXa44eZ9n21kygGQTq5ASCvcviSaj5GdiTzmxflbsFHiIF/exec"
     }

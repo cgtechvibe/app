@@ -27,7 +27,7 @@
             // Base = direktori tempat index.html ni hidup (cth /famtree/ atau /PWA/)
             var base = location.pathname.replace(/\/[^\/]*$/, '/');
             // Default: client pertama, fallback gunakan path dari list.json
-            var target = base + 'client1/';
+            var target = base + 'alpha/';
             try {
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', base + 'list.json', false);
