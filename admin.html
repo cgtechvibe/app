@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Olla Apps Admin</title>
+    <meta name="theme-color" content="#121212">
+    <script src="admin-config.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            background: #121212; color: #e0e0e0;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            min-height: 100%;
+        }
+        body { padding: 28px 20px 48px; }
+        .header { text-align: center; margin-bottom: 24px; }
+        .header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+        .header p { margin-top: 4px; color: #888; font-size: 13px; }
+
+        .panel { max-width: 440px; margin: 0 auto; }
+        .card {
+            background: #1e1e2a; border: 1px solid #2c2c3a;
+            border-radius: 16px; padding: 20px; margin-bottom: 16px;
+        }
+        .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+
+        .field { margin-bottom: 14px; }
+        .field label { display: block; font-size: 12.5px; color: #9a9ab0; margin-bottom: 6px; }
+        .field input[type="text"], .field input[type="password"], .field input[type="url"] {
+            width: 100%; padding: 11px 12px; border-radius: 10px;
+            border: 1px solid #33334a; background: #16161f; color: #fff; font-size: 14px;
+        }
+        .field input:focus { outline: none; border-color: #5a5a78; }
+        .field .hint { font-size: 11.5px; color: #666; margin-top: 4px; }
+
+        .upload { display: flex; align-items: center; gap: 12px; }
+        .upload .box {
+            width: 56px; height: 56px; border-radius: 12px; overflow: hidden;
+            background: #16161f; border: 1px dashed #3a3a50;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; color: #666; text-align: center; flex-shrink: 0;
+        }
+        .upload .box img { width: 100%; height: 100%; object-fit: cover; }
+        .upload input[type="file"] { font-size: 12px; color: #ccc; }
+        .upload input[type="file"]::file-selector-button {
+            background: #26263a; color: #ddd; border: 1px solid #3a3a50;
+            padding: 8px 12px; border-radius: 8px; margin-right: 10px; cursor: pointer;
+        }
+
+        .btn {
+            width: 100%; padding: 13px; border-radius: 12px; border: none;
+            background: #7c6cff; color: #fff; font-size: 15px; font-weight: 600;
+            cursor: pointer; margin-top: 8px;
+        }
+        .btn:hover { background: #8d7fff; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn.gray { background: #2c2c3a; }
+
+        #status { text-align: center; font-size: 13px; margin-top: 10px; min-height: 18px; }
+        #status.ok { color: #6fc46f; }
+        #status.err { color: #e07b7b; }
+
+        .hidden { display: none !important; }
+        .msg { text-align: center; color: #888; font-size: 13.5px; margin: 18px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 id="title">Admin Panel</h1>
+        <p>Tambahkan client PWA baru ke repo</p>
+    </div>
+
+    <div class="panel">
+        <!-- LOGIN SCREEN -->
+        <div id="loginView" class="card">
+            <h2>Login</h2>
+            <div class="field">
+                <label>PIN</label>
+                <input type="password" id="pinInput" placeholder="Masukkan PIN" inputmode="numeric">
+            </div>
+            <div class="field">
+                <label>GitHub Token (PAT)</label>
+                <input type="password" id="tokenInput" placeholder="Masukkan token (seperti dalam admin-config.js)">
+                <div class="hint">Jika token diisi dalam admin-config.js, tinggalkan kosong.</div>
+            </div>
+            <button class="btn" id="loginBtn">Buka Panel</button>
+            <div id="status"></div>
+        </div>
+
+        <!-- ADMIN VIEW -->
+        <div id="adminView" class="hidden">
+            <div class="card">
+                <h2>Tambah Client Baru</h2>
+                <div class="field">
+                    <label>Nama System</label>
+                    <input type="text" id="fName" placeholder="cth: FamTree">
+                </div>
+                <div class="field">
+                    <label>Deskripsi</label>
+                    <input type="text" id="fDesc" placeholder="cth: Family tree management">
+                </div>
+                <div class="field">
+                    <label>Folder Path (URL client)</label>
+                    <input type="text" id="fPath" placeholder="cth: famtree2 (bukan nama penuh)">
+                    <div class="hint">Link jadi .../famtree/&lt;path&gt;/</div>
+                </div>
+                <div class="field">
+                    <label>GAS Exec URL</label>
+                    <input type="url" id="fUrl" placeholder="https://script.google.com/macros/s/.../exec">
+                </div>
+                <div class="field">
+                    <label>Ikon (satu gambar — auto resize 192 &amp; 512)</label>
+                    <div class="upload">
+                        <div class="box" id="iconPreview">preview</div>
+                        <input type="file" id="fIcon" accept="image/*">
+                    </div>
+                </div>
+                <button class="btn" id="addBtn">Tambah Client</button>
+            </div>
+            <div id="status2"></div>
+            <button class="btn gray" id="logOutBtn">Log Keluar</button>
+        </div>
+
+        <div class="msg hidden" id="workingMsg">Menghantar ke GitHub… jangan tutup tab</div>
+    </div>
+
+    <script>
+    // ===== CONFIG =====
+    var CFG = window.ADMIN_CONFIG || { owner: '', repo: '', branch: 'main', token: '', pin: '' };
+    var LS_TOKEN_KEY = 'olla_admin_token';
+    // Cuba token dari localStorage (persist per-device) dahulu
+    var rememberedToken = '';
+    try { rememberedToken = localStorage.getItem(LS_TOKEN_KEY) || ''; } catch (e) {}
+    var token = rememberedToken || CFG.TOKEN || '';
+    var pin = CFG.PIN || '';
+
+    document.getElementById('title').textContent = CFG.TITLE || 'Admin Panel';
+
+    var iconData = null; // {name, dataUrl}
+
+    // ===== IMAGE RESIZE =====
+    function resizeImage(file, size) {
+        return new Promise(function (resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var img = new Image();
+                img.onload = function () {
+                    var canvas = document.createElement('canvas');
+                    canvas.width = size; canvas.height = size;
+                    var ctx = canvas.getContext('2d');
+                    var s = Math.min(img.width, img.height);
+                    var sx = (img.width - s) / 2, sy = (img.height - s) / 2;
+                    ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function dataUrlToBase64(dataUrl) {
+        return dataUrl.split(',')[1] || '';
+    }
+
+    // ===== GITHUB API HELPERS =====
+    function gh(method, path, body) {
+        return fetch('https://api.github.com/repos/' + CFG.OWNER + '/' + CFG.REPO + path, {
+            method: method,
+            headers: {
+                'Authorization': 'token ' + token,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: body ? JSON.stringify(body) : undefined
+        }).then(function (r) {
+            if (!r.ok) return r.json().then(function (e) { throw new Error((e && e.message) || ('HTTP ' + r.status)); });
+            return r.status === 204 ? null : r.json();
+        });
+    }
+
+    function getFileSha(path) {
+        return gh('GET', '/contents/' + path).then(function (data) { return data.sha; });
+    }
+
+    // ===== BUILD FILES FOR NEW CLIENT =====
+    function buildClientFiles(path, name, url, icon192, icon512) {
+        var indexHtml =
+            '<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n' +
+            '    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">\n' +
+            '    <title>' + name + '</title>\n    <link rel="manifest" href="manifest.json">\n' +
+            '    <meta name="theme-color" content="#121212">\n' +
+            '    <meta name="mobile-web-app-capable" content="yes">\n' +
+            '    <meta name="apple-mobile-web-app-capable" content="yes">\n' +
+            '    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n' +
+            '    <link rel="apple-touch-icon" href="icon-192.png">\n    <style>\n' +
+            '        * { margin: 0; padding: 0; box-sizing: border-box; }\n' +
+            '        html, body { width: 100%; height: 100%; overflow: hidden; background: #121212; }\n' +
+            '        #app { position: fixed; inset: 0; }\n' +
+            '        #app iframe { width: 100%; height: 100%; border: none; display: block; }\n' +
+            '    </style>\n</head>\n<body>\n    <div id="app">\n' +
+            '        <iframe src="' + url + '" allow="camera; microphone; geolocation"></iframe>\n    </div>\n' +
+            '    <script>\n        window.addEventListener("load", function () {\n' +
+            '            if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});\n' +
+            '        });\n    <\/script>\n</body>\n</html>\n';
+
+        var manifest = {
+            name: name,
+            short_name: name,
+            description: '',
+            start_url: './index.html',
+            scope: './',
+            display: 'standalone',
+            background_color: '#121212',
+            theme_color: '#121212',
+            orientation: 'portrait-primary',
+            icons: [
+                { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+                { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+                { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+            ]
+        };
+
+        var sw = [
+            'const CACHE_NAME = \'pwa-wrapper-v1\';',
+            'const ASSETS = [\'./\', \'./index.html\', \'./manifest.json\', \'./icon-192.png\', \'./icon-512.png\'];',
+            '',
+            "self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting())); });",
+            '',
+            "self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });",
+            '',
+            "self.addEventListener('fetch', (e) => { if (!e.request.url.startsWith(self.location.origin)) return; e.respondWith(fetch(e.request).then((r) => { const c = r.clone(); caches.open(CACHE_NAME).then((ca) => ca.put(e.request, c)); return r; }).catch(() => caches.match(e.request))); });"
+        ].join('\n');
+
+        return [
+            { path: path + '/index.html', content: indexHtml },
+            { path: path + '/manifest.json', content: JSON.stringify(manifest, null, 2) },
+            { path: path + '/sw.js', content: sw },
+            { path: path + '/icon-192.png', content: icon192, binary: true },
+            { path: path + '/icon-512.png', content: icon512, binary: true }
+        ];
+    }
+
+    // ===== CREATE/UPDATE VIA GIT DATA API =====
+    function commitAll(files, message) {
+        var created;
+        return gh('POST', '/git/refs', { ref: 'refs/heads/' + CFG.BRANCH }).catch(function () {})
+            .then(function () {
+                return gh('GET', '/git/ref/heads/' + CFG.BRANCH);
+            })
+            .then(function (baseRef) {
+                var baseSha = baseRef.object.sha;
+                var blobs = files.map(function (f) {
+                    return gh('POST', '/git/blobs', { content: f.content, encoding: f.binary ? 'base64' : 'utf-8' })
+                        .then(function (b) { return { path: f.path, mode: '100644', type: 'blob', sha: b.sha }; });
+                });
+                return Promise.all(blobs).then(function (tree) {
+                    return gh('POST', '/git/trees', { base_tree: baseSha, tree: tree });
+                }).then(function (newTree) {
+                    return gh('POST', '/git/commits', { message: message, tree: newTree.sha, parents: [baseSha] });
+                }).then(function (commit) {
+                    return gh('PATCH', '/git/refs/heads/' + CFG.BRANCH, { sha: commit.sha, force: false });
+                });
+            });
+    }
+
+    // ===== LOGIN =====
+    document.getElementById('loginBtn').addEventListener('click', function () {
+        var status = document.getElementById('status');
+        var p = document.getElementById('pinInput').value;
+        var t = document.getElementById('tokenInput').value || token;
+
+        if (pin && p !== pin) { status.className = 'err'; status.textContent = 'PIN salah.'; return; }
+        if (!t) { status.className = 'err'; status.textContent = 'Perlu GitHub token.'; return; }
+        token = t;
+        // Persist token ke localStorage supaya tak perlu taip semula lain kali
+        try { localStorage.setItem(LS_TOKEN_KEY, t); } catch (e) {}
+        status.className = 'ok';
+        status.textContent = 'OK. Panel dibuka.';
+        document.getElementById('loginView').classList.add('hidden');
+        document.getElementById('adminView').classList.remove('hidden');
+    });
+
+    // Jika ada remembered token, hilangkan keperluan taip: paparkan hint dalam input
+    if (token) {
+        document.getElementById('tokenInput').setAttribute('placeholder', 'Token disimpan — biar kosong');
+    }
+
+    document.getElementById('logOutBtn').addEventListener('click', function () {
+        document.getElementById('adminView').classList.add('hidden');
+        document.getElementById('loginView').classList.remove('hidden');
+        document.getElementById('status').textContent = '';
+    });
+
+    // ===== ICON PREVIEW & RESIZE =====
+    document.getElementById('fIcon').addEventListener('change', function (e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        resizeImage(file, 192).then(function (d192) {
+            return resizeImage(file, 512).then(function (d512) {
+                iconData = { name: file.name, small: d192, large: d512 };
+                document.getElementById('iconPreview').innerHTML = '<img src="' + d192 + '" alt="icon">';
+            });
+        }).catch(function () { iconData = null; });
+    });
+
+    // ===== ADD CLIENT =====
+    document.getElementById('addBtn').addEventListener('click', function () {
+        var name = document.getElementById('fName').value.trim();
+        var desc = document.getElementById('fDesc').value.trim();
+        var path = document.getElementById('fPath').value.trim();
+        var url = document.getElementById('fUrl').value.trim();
+        var status = document.getElementById('status2');
+        status.className = ''; status.textContent = '';
+
+        if (!name || !path || !url) { status.className = 'err'; status.textContent = 'Isi nama, path & GAS url.'; return; }
+        if (!/^[a-z0-9\-_]+$/i.test(path)) { status.className = 'err'; status.textContent = 'Path hanya huruf/nombor/-/_.'; return; }
+
+        var proceed = function () {
+            // Client files (index.html, manifest.json, sw.js, icons)
+            var files = buildClientFiles(path, name, url, iconData.small.split(',')[1], iconData.large.split(',')[1]);
+
+            document.getElementById('workingMsg').classList.remove('hidden');
+
+            // update list.json
+            gh('GET', '/contents/list.json').then(function (data) {
+                var list = JSON.parse(atob(data.content.replace(/\n/g, '')));
+                if (!list.clients) list.clients = [];
+                list.clients.push({
+                    id: path.toLowerCase(),
+                    path: path,
+                    name: name,
+                    description: desc,
+                    icon: './' + path + '/icon-192.png',
+                    url: url
+                });
+                files.push({ path: 'list.json', content: JSON.stringify(list, null, 2), binary: false });
+                return commitAll(files, 'Add client: ' + name);
+            }).then(function () {
+                document.getElementById('workingMsg').classList.add('hidden');
+                status.className = 'ok';
+                status.textContent = 'Client "' + name + '" ditambah! Link: .../' + path + '/';
+                document.getElementById('fName').value = '';
+                document.getElementById('fDesc').value = '';
+                document.getElementById('fPath').value = '';
+                document.getElementById('fUrl').value = '';
+                document.getElementById('fIcon').value = '';
+                iconData = null;
+                document.getElementById('iconPreview').textContent = 'preview';
+            }).catch(function (err) {
+                document.getElementById('workingMsg').classList.add('hidden');
+                status.className = 'err';
+                status.textContent = 'Ralat: ' + err.message;
+            });
+        };
+
+        if (iconData) proceed();
+        else status.className = 'err', status.textContent = 'Sila pilih ikon.', iconData = null;
+    });
+    </script>
+    <script src="admin-config.js"></script>
+</body>
+</html>
