@@ -256,10 +256,15 @@
     }
 
     // ===== GITHUB API =====
-    function gh(method, path, body) {
+    function gh(method, path, body, opts) {
+        var headers = { 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+        // Repo ini PUBLIC: baca fail tak perlu token. Hantar token hanya bila
+        // (a) bukan baca awam, DAN (b) token wujud. Kalau token stale/revoke,
+        // GitHub balas 401 walaupun untuk repo public — elak dengan skip terus.
+        if (!(opts && opts.public) && token) headers['Authorization'] = 'token ' + token;
         return fetch('https://api.github.com/repos/' + O.owner + '/' + O.repo + path, {
             method: method,
-            headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            headers: headers,
             body: body ? JSON.stringify(body) : undefined
         }).then(function (r) {
             if (!r.ok) return r.json().then(function (e) { throw new Error((e && e.message) || ('HTTP ' + r.status)); });
@@ -267,7 +272,9 @@
         });
     }
     function getList() {
-        return gh('GET', '/contents/list.json').then(function (d) {
+        // Baca list.json tanpa auth — sentiasa berjaya untuk repo public,
+        // walaupun token tersimpan lama/revoke.
+        return gh('GET', '/contents/list.json', null, { public: true }).then(function (d) {
             state.list = JSON.parse(b64decode(d.content));
             return state.list;
         });
@@ -302,14 +309,33 @@
         var status = document.getElementById('status');
         if (O.pin && p !== O.pin) { status.className = 'err'; status.textContent = 'PIN salah.'; return; }
         if (!t) { status.className = 'err'; status.textContent = 'Perlu GitHub token.'; return; }
-        token = t;
-        try { localStorage.setItem(LS_TOKEN_KEY, t); } catch (e) {}
-        document.getElementById('loginView').classList.add('hidden');
-        document.getElementById('adminView').classList.remove('hidden');
-        document.getElementById('logOutBtn').classList.remove('hidden');
-        document.getElementById('status').textContent = '';
-        refreshAll();
-        setTimeout(loadMenu, 0);
+
+        // Sahkan token dulu (GET /repos = public read, no write) sebelum masuk panel
+        status.className = ''; status.textContent = 'Mengesahkan token…';
+        fetch('https://api.github.com/repos/' + O.owner + '/' + O.repo, {
+            headers: { 'Authorization': 'token ' + t, 'Accept': 'application/vnd.github.v3+json' }
+        }).then(function (r) {
+            if (r.status === 401 || r.status === 403) {
+                status.className = 'err';
+                status.textContent = 'Token tidak sah atau tamat. Masukkan token baru yang betul.';
+                return null;
+            }
+            if (!r.ok) return r.json().then(function (e) { throw new Error((e && e.message) || ('HTTP ' + r.status)); });
+            return true;
+        }).then(function (ok) {
+            if (ok !== true) return;
+            token = t;
+            try { localStorage.setItem(LS_TOKEN_KEY, t); } catch (e) {}
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('adminView').classList.remove('hidden');
+            document.getElementById('logOutBtn').classList.remove('hidden');
+            document.getElementById('status').textContent = '';
+            refreshAll();
+            setTimeout(loadMenu, 0);
+        }).catch(function (err) {
+            status.className = 'err';
+            status.textContent = 'Ralat semasa login: ' + err.message;
+        });
     });
     document.getElementById('logOutBtn').addEventListener('click', function () {
         document.getElementById('adminView').classList.add('hidden');
@@ -366,7 +392,11 @@
     }
 
     function refreshAll() {
-        getList().then(render).catch(function (err) { toast('Ralat muat senarai: ' + err.message); });
+        getList().then(render).catch(function (err) {
+            document.getElementById('clientList').innerHTML =
+                '<div class="sub" style="color:#e07b7b;font-size:13px;">Ralat: ' + (err.message || 'tidak diketahui') + '</div>';
+            toast('Ralat muat senarai: ' + err.message);
+        });
     }
 
     // ===== ACTIONS =====
