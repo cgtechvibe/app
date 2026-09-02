@@ -133,20 +133,6 @@
                 <div id="clientList"></div>
             </div>
 
-            <!-- Menu settings -->
-            <div class="card">
-                <h2>Main Menu</h2>
-                <div class="field">
-                    <label>Title</label>
-                    <input type="text" id="mTitle" placeholder="Olla Apps">
-                </div>
-                <div class="field">
-                    <label>Subtitle</label>
-                    <input type="text" id="mSubtitle" placeholder="Select a system to open">
-                </div>
-                <button class="btn gray" id="saveMenuBtn">Save Menu</button>
-            </div>
-
             <!-- Add client -->
             <div class="card">
                 <h2>Add New Client</h2>
@@ -338,7 +324,6 @@
             document.getElementById('logOutBtn').classList.remove('hidden');
             document.getElementById('status').textContent = '';
             refreshAll();
-            setTimeout(loadMenu, 0);
         }).catch(function (err) {
             status.className = 'err';
             status.textContent = 'Login error: ' + err.message;
@@ -568,22 +553,6 @@
     document.getElementById('eCancelBtn').addEventListener('click', function () {
         document.getElementById('editCard').classList.add('hidden');
         state.editingId = null; state.editIcon = null;
-    });
-
-    // ===== MENU SETTINGS =====
-    function loadMenu() {
-        if (state.list) {
-            document.getElementById('mTitle').value = state.list.menuTitle || 'Olla Apps';
-            document.getElementById('mSubtitle').value = state.list.menuSubtitle || 'Select a system to open';
-        }
-    }
-    document.getElementById('saveMenuBtn').addEventListener('click', function () {
-        var t = document.getElementById('mTitle').value.trim();
-        var s = document.getElementById('mSubtitle').value.trim();
-        state.list = state.list || {};
-        state.list.menuTitle = t || 'Olla Apps';
-        state.list.menuSubtitle = s || '';
-        run(commitList('Update menu settings'), function () { toast('Menu updated'); refreshAll(); });
     });
     </script>
 </body>
