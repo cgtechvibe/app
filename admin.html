@@ -8,57 +8,64 @@
     <script src="admin-config.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --cw: 720px; }
         html, body {
             background: #121212; color: #e0e0e0;
             font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
             min-height: 100%;
         }
-        body { padding: 22px 16px 48px; }
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; max-width: 520px; margin-left: auto; margin-right: auto; }
-        .header h1 { font-size: 21px; font-weight: 700; letter-spacing: -0.4px; }
-        .header .mini { color: #888; font-size: 12px; margin-top: 2px; }
-        .panel { max-width: 520px; margin: 0 auto; }
+        body { padding: 24px 16px 48px; }
+
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            max-width: var(--cw); margin: 0 auto 20px; width: 100%;
+        }
+        .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+        .header .mini { color: #888; font-size: 12.5px; margin-top: 2px; }
+        .panel { max-width: var(--cw); margin: 0 auto; width: 100%; }
 
         .card {
             background: #1e1e2a; border: 1px solid #2c2c3a;
-            border-radius: 16px; padding: 16px; margin-bottom: 14px;
+            border-radius: 16px; padding: clamp(14px, 3vw, 20px); margin-bottom: 14px;
         }
-        .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+        .card h2 { font-size: 15.5px; font-weight: 600; margin-bottom: 14px; }
 
         .field { margin-bottom: 12px; }
-        .field label { display: block; font-size: 12px; color: #9a9ab0; margin-bottom: 5px; }
+        .field label { display: block; font-size: 12.5px; color: #9a9ab0; margin-bottom: 5px; }
         .field input[type="text"], .field input[type="url"], .field input[type="password"] {
-            width: 100%; padding: 10px 11px; border-radius: 10px;
-            border: 1px solid #33334a; background: #16161f; color: #fff; font-size: 14px;
+            width: 100%; padding: 11px 12px; border-radius: 10px;
+            border: 1px solid #33334a; background: #16161f; color: #fff; font-size: 14.5px;
         }
         .field input:focus { outline: none; border-color: #5a5a78; }
         .field .hint { font-size: 11px; color: #666; margin-top: 4px; }
 
         .btn {
-            padding: 11px 14px; border-radius: 10px; border: none;
-            background: #7c6cff; color: #fff; font-size: 14px; font-weight: 600;
+            padding: 12px 16px; border-radius: 10px; border: none;
+            background: #7c6cff; color: #fff; font-size: 14.5px; font-weight: 600;
             cursor: pointer; width: 100%;
         }
         .btn:hover { background: #8d7fff; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn.gray { background: #2c2c3a; color: #ddd; }
-        .btn.small { width: auto; padding: 6px 9px; font-size: 12px; border-radius: 8px; }
+        .btn.small { width: 100%; padding: 9px 6px; font-size: 12.5px; border-radius: 8px; }
         .btn.danger { background: #b3384a; }
+        .btn.danger:hover { background: #c34657; }
 
+        /* Client list rows — name+desc on top spanning full width, actions below */
         .row {
-            display: flex; align-items: center; gap: 12px;
             background: #181822; border: 1px solid #27273a;
-            border-radius: 14px; padding: 10px 12px; margin-bottom: 10px;
+            border-radius: 14px; padding: 14px; margin-bottom: 10px;
         }
-        .row .thumb { width: 44px; height: 44px; border-radius: 11px; overflow: hidden; background: #24243a; flex-shrink: 0; }
+        .row-top { display: flex; align-items: center; gap: 13px; }
+        .row .thumb { width: 46px; height: 46px; border-radius: 11px; overflow: hidden; background: #24243a; flex-shrink: 0; }
         .row .thumb img { width: 100%; height: 100%; object-fit: cover; }
         .row .meta { flex: 1; min-width: 0; }
-        .row .meta .name { font-size: 14.5px; font-weight: 600; }
-        .row .meta .sub { font-size: 11.5px; color: #8a8aa0; }
-        .row .meta .tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 99px; margin-top: 4px; }
+        .row .meta .name { font-size: 16px; font-weight: 600; line-height: 1.2; }
+        .row .meta .sub { font-size: 12.5px; color: #8a8aa0; margin-top: 2px; overflow-wrap: anywhere; }
+        .row .meta .tag { display: inline-block; font-size: 10.5px; padding: 2px 8px; border-radius: 99px; margin-top: 6px; }
         .row .meta .tag.on { background: #1d3a2a; color: #6fc46f; }
         .row .meta .tag.off { background: #3a2424; color: #e07b7b; }
-        .row .acts { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
+        .row .acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 13px; }
 
         #status, #status2, #status3 { text-align: center; font-size: 13px; margin-top: 10px; min-height: 18px; }
         .ok { color: #6fc46f; }
@@ -66,9 +73,9 @@
         .hidden { display: none !important; }
 
         .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-        .stat { background: #181822; border: 1px solid #27273a; border-radius: 14px; padding: 12px; text-align: center; }
-        .stat .n { font-size: 22px; font-weight: 700; }
-        .stat .l { font-size: 11px; color: #8a8aa0; margin-top: 2px; }
+        .stat { background: #181822; border: 1px solid #27273a; border-radius: 14px; padding: 13px; text-align: center; }
+        .stat .n { font-size: 24px; font-weight: 700; }
+        .stat .l { font-size: 11.5px; color: #8a8aa0; margin-top: 2px; }
 
         .upload { display: flex; align-items: center; gap: 10px; }
         .upload .box {
@@ -78,7 +85,7 @@
             font-size: 9px; color: #666; text-align: center; flex-shrink: 0;
         }
         .upload .box img { width: 100%; height: 100%; object-fit: cover; }
-        .upload input[type="file"] { font-size: 11.5px; color: #ccc; }
+        .upload input[type="file"] { font-size: 11.5px; color: #ccc; max-width: 100%; }
         .upload input[type="file"]::file-selector-button {
             background: #26263a; color: #ddd; border: 1px solid #3a3a50;
             padding: 7px 10px; border-radius: 8px; margin-right: 8px; cursor: pointer;
@@ -90,9 +97,9 @@
     <div class="header">
         <div>
             <h1 id="title">Admin Panel</h1>
-            <div class="mini">Kelola client PWA</div>
+            <div class="mini">Manage PWA clients</div>
         </div>
-        <button class="btn small gray hidden" id="logOutBtn">Log Keluar</button>
+        <button class="btn small gray hidden" id="logOutBtn" style="width:auto; padding:9px 14px;">Log Out</button>
     </div>
 
     <div class="panel">
@@ -101,73 +108,73 @@
             <h2>Login</h2>
             <div class="field">
                 <label>PIN</label>
-                <input type="password" id="pinInput" placeholder="Masukkan PIN" inputmode="numeric">
+                <input type="password" id="pinInput" placeholder="Enter PIN" inputmode="numeric">
             </div>
             <div class="field">
                 <label>GitHub Token (PAT)</label>
-                <input type="password" id="tokenInput" placeholder="Masukkan token / biar kosong jika tersimpan">
-                <div class="hint">Token disimpan dalam peranti anda selepas login pertama.</div>
+                <input type="password" id="tokenInput" placeholder="Enter token / leave blank if saved">
+                <div class="hint">Token is stored on this device after the first login.</div>
             </div>
-            <button class="btn" id="loginBtn">Buka Panel</button>
+            <button class="btn" id="loginBtn">Open Panel</button>
             <div id="status"></div>
         </div>
 
         <!-- ADMIN -->
         <div id="adminView" class="hidden">
             <div class="stats">
-                <div class="stat"><div class="n" id="stTotal">0</div><div class="l">Jumlah</div></div>
-                <div class="stat"><div class="n" id="stVisible">0</div><div class="l">Aktif</div></div>
-                <div class="stat"><div class="n" id="stHidden">0</div><div class="l">Sembunyi</div></div>
+                <div class="stat"><div class="n" id="stTotal">0</div><div class="l">Total</div></div>
+                <div class="stat"><div class="n" id="stVisible">0</div><div class="l">Visible</div></div>
+                <div class="stat"><div class="n" id="stHidden">0</div><div class="l">Hidden</div></div>
             </div>
 
-            <!-- Senarai client -->
+            <!-- Clients -->
             <div class="card">
-                <h2>Senarai Client</h2>
+                <h2>Clients</h2>
                 <div id="clientList"></div>
             </div>
 
             <!-- Menu settings -->
             <div class="card">
-                <h2>Menu Utama</h2>
+                <h2>Main Menu</h2>
                 <div class="field">
-                    <label>Tajuk</label>
+                    <label>Title</label>
                     <input type="text" id="mTitle" placeholder="Olla Apps">
                 </div>
                 <div class="field">
                     <label>Subtitle</label>
-                    <input type="text" id="mSubtitle" placeholder="Pilih sistem untuk dibuka">
+                    <input type="text" id="mSubtitle" placeholder="Select a system to open">
                 </div>
-                <button class="btn gray" id="saveMenuBtn">Simpan Menu</button>
+                <button class="btn gray" id="saveMenuBtn">Save Menu</button>
             </div>
 
-            <!-- Tambah client -->
+            <!-- Add client -->
             <div class="card">
-                <h2>Tambah Client Baru</h2>
+                <h2>Add New Client</h2>
                 <div class="field">
-                    <label>Nama System</label>
-                    <input type="text" id="fName" placeholder="cth: BNBMan">
+                    <label>System Name</label>
+                    <input type="text" id="fName" placeholder="e.g. BNBMan">
                 </div>
                 <div class="field">
-                    <label>Deskripsi</label>
-                    <input type="text" id="fDesc" placeholder="cth: Homestay management">
+                    <label>Description</label>
+                    <input type="text" id="fDesc" placeholder="e.g. Homestay management">
                 </div>
                 <div class="field">
                     <label>Folder Path</label>
-                    <input type="text" id="fPath" placeholder="cth: bnb2 (huruf/kecil/nombor/-/_ only)">
-                    <div class="hint">Link jadi .../famtree/&lt;path&gt;/</div>
+                    <input type="text" id="fPath" placeholder="e.g. bnb2 (lowercase letters/numbers/-/_ only)">
+                    <div class="hint">Link becomes .../famtree/&lt;path&gt;/</div>
                 </div>
                 <div class="field">
                     <label>GAS Exec URL</label>
                     <input type="url" id="fUrl" placeholder="https://script.google.com/macros/s/.../exec">
                 </div>
                 <div class="field">
-                    <label>Ikon (1 gambar — auto resize 192 &amp; 512)</label>
+                    <label>Icon (1 image — auto resize to 192 &amp; 512)</label>
                     <div class="upload">
-                        <div class="box" id="addIconPreview">preview</div>
+                        <div class="box" id="addIconPreview">Preview</div>
                         <input type="file" id="fIcon" accept="image/*">
                     </div>
                 </div>
-                <button class="btn" id="addBtn">Tambah Client</button>
+                <button class="btn" id="addBtn">Add Client</button>
                 <div id="status2"></div>
             </div>
 
@@ -175,11 +182,11 @@
             <div class="card hidden" id="editCard">
                 <h2 id="editTitle">Edit Client</h2>
                 <div class="field">
-                    <label>Nama System</label>
+                    <label>System Name</label>
                     <input type="text" id="eName">
                 </div>
                 <div class="field">
-                    <label>Deskripsi</label>
+                    <label>Description</label>
                     <input type="text" id="eDesc">
                 </div>
                 <div class="field">
@@ -187,21 +194,21 @@
                     <input type="url" id="eUrl">
                 </div>
                 <div class="field">
-                    <label>Ikon (kosongkan jika tak tukar)</label>
+                    <label>Icon (leave empty to keep current)</label>
                     <div class="upload">
-                        <div class="box" id="editIconPreview">preview</div>
+                        <div class="box" id="editIconPreview">Preview</div>
                         <input type="file" id="eIcon" accept="image/*">
                     </div>
                 </div>
                 <div style="display:flex; gap:8px; margin-top:6px;">
-                    <button class="btn" id="eSaveBtn" style="flex:1;">Simpan</button>
-                    <button class="btn gray" id="eCancelBtn" style="flex:1;">Batal</button>
+                    <button class="btn" id="eSaveBtn" style="flex:1;">Save</button>
+                    <button class="btn gray" id="eCancelBtn" style="flex:1;">Cancel</button>
                 </div>
                 <div id="status3"></div>
             </div>
         </div>
 
-        <div class="msg hidden" id="workingMsg" style="text-align:center; color:#aaa; margin:14px 0; font-size:13.5px;">Mengemaskini GitHub… jangan tutup tab</div>
+        <div class="msg hidden" id="workingMsg" style="text-align:center; color:#aaa; margin:14px 0; font-size:13.5px;">Updating GitHub… don't close the tab</div>
     </div>
 
     <script>
@@ -216,7 +223,7 @@
     try { token = localStorage.getItem(LS_TOKEN_KEY) || ''; } catch (e) {}
 
     document.getElementById('title').textContent = CFG.TITLE || 'Admin Panel';
-    if (token) document.getElementById('tokenInput').setAttribute('placeholder', 'Token disimpan — biar kosong');
+    if (token) document.getElementById('tokenInput').setAttribute('placeholder', 'Token saved — leave blank');
 
     var state = { list: null, editingId: null, addIcon: null, editIcon: null };
 
@@ -258,9 +265,9 @@
     // ===== GITHUB API =====
     function gh(method, path, body, opts) {
         var headers = { 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
-        // Repo ini PUBLIC: baca fail tak perlu token. Hantar token hanya bila
-        // (a) bukan baca awam, DAN (b) token wujud. Kalau token stale/revoke,
-        // GitHub balas 401 walaupun untuk repo public — elak dengan skip terus.
+        // This repo is PUBLIC: reading files needs no token. Only send a token
+        // when it exists AND the call is not a public read. A stale/revoked
+        // token makes GitHub answer 401 even for public repos, so we skip it.
         if (!(opts && opts.public) && token) headers['Authorization'] = 'token ' + token;
         return fetch('https://api.github.com/repos/' + O.owner + '/' + O.repo + path, {
             method: method,
@@ -272,8 +279,8 @@
         });
     }
     function getList() {
-        // Baca list.json tanpa auth — sentiasa berjaya untuk repo public,
-        // walaupun token tersimpan lama/revoke.
+        // Read list.json without auth — always succeeds for a public repo,
+        // even if the stored token is old or revoked.
         return gh('GET', '/contents/list.json', null, { public: true }).then(function (d) {
             state.list = JSON.parse(b64decode(d.content));
             return state.list;
@@ -307,17 +314,17 @@
         var p = document.getElementById('pinInput').value;
         var t = document.getElementById('tokenInput').value || token;
         var status = document.getElementById('status');
-        if (O.pin && p !== O.pin) { status.className = 'err'; status.textContent = 'PIN salah.'; return; }
-        if (!t) { status.className = 'err'; status.textContent = 'Perlu GitHub token.'; return; }
+        if (O.pin && p !== O.pin) { status.className = 'err'; status.textContent = 'PIN incorrect.'; return; }
+        if (!t) { status.className = 'err'; status.textContent = 'GitHub token required.'; return; }
 
-        // Sahkan token dulu (GET /repos = public read, no write) sebelum masuk panel
-        status.className = ''; status.textContent = 'Mengesahkan token…';
+        // Verify token first (GET /repos = public read, no write) before entering
+        status.className = ''; status.textContent = 'Verifying token…';
         fetch('https://api.github.com/repos/' + O.owner + '/' + O.repo, {
             headers: { 'Authorization': 'token ' + t, 'Accept': 'application/vnd.github.v3+json' }
         }).then(function (r) {
             if (r.status === 401 || r.status === 403) {
                 status.className = 'err';
-                status.textContent = 'Token tidak sah atau tamat. Masukkan token baru yang betul.';
+                status.textContent = 'Invalid or expired token. Enter a new correct token.';
                 return null;
             }
             if (!r.ok) return r.json().then(function (e) { throw new Error((e && e.message) || ('HTTP ' + r.status)); });
@@ -334,7 +341,7 @@
             setTimeout(loadMenu, 0);
         }).catch(function (err) {
             status.className = 'err';
-            status.textContent = 'Ralat semasa login: ' + err.message;
+            status.textContent = 'Login error: ' + err.message;
         });
     });
     document.getElementById('logOutBtn').addEventListener('click', function () {
@@ -345,13 +352,13 @@
 
     function busy(on, text) {
         var w = document.getElementById('workingMsg');
-        if (on) { w.textContent = text || 'Mengemaskini GitHub… jangan tutup tab'; w.classList.remove('hidden'); }
+        if (on) { w.textContent = text || 'Updating GitHub… don\'t close the tab'; w.classList.remove('hidden'); }
         else w.classList.add('hidden');
     }
     function run(op, onOk) {
         busy(true);
         op.then(function () { busy(false); onOk && onOk(); })
-            .catch(function (err) { busy(false); toast('Ralat: ' + err.message); });
+            .catch(function (err) { busy(false); toast('Error: ' + err.message); });
     }
 
     // ===== DASHBOARD =====
@@ -366,25 +373,24 @@
         var base = location.pathname.replace(/\/[^\/]*$/, '/');
         var origin = location.origin;
         var html = '';
-        if (!clients.length) html = '<div class="sub" style="color:#8a8aa0;font-size:13px;">Tiada client lagi.</div>';
-        clients.forEach(function (c, i) {
+        if (!clients.length) html = '<div class="sub" style="color:#8a8aa0;font-size:13px;">No clients yet.</div>';
+        clients.forEach(function (c) {
             var icon = c.icon ? (c.icon.indexOf('http') === 0 ? c.icon : origin + base + c.icon.replace(/^\.?\//, '')) : origin + base + 'icon-192.png';
             var on = c.visible !== false;
             html += '<div class="row">' +
-                '<div class="thumb"><img src="' + icon + '" alt=""></div>' +
-                '<div class="meta">' +
-                    '<div class="name">' + (c.name || 'App') + '</div>' +
-                    '<div class="sub">' + (c.path || '') + (c.description ? ' · ' + c.description : '') + '</div>' +
-                    '<span class="tag ' + (on ? 'on' : 'off') + '">' + (on ? 'Aktif' : 'Sembunyi') + '</span>' +
+                '<div class="row-top">' +
+                    '<div class="thumb"><img src="' + icon + '" alt=""></div>' +
+                    '<div class="meta">' +
+                        '<div class="name">' + (c.name || 'App') + '</div>' +
+                        '<div class="sub">' + (c.path || '') + (c.description ? ' · ' + c.description : '') + '</div>' +
+                        '<span class="tag ' + (on ? 'on' : 'off') + '">' + (on ? 'Visible' : 'Hidden') + '</span>' +
+                    '</div>' +
                 '</div>' +
                 '<div class="acts">' +
-                    '<button class="btn small" data-act="open" data-id="' + c.id + '">Buka</button>' +
-                    '<button class="btn small gray" data-act="copy" data-id="' + c.id + '">Salin</button>' +
-                    '<button class="btn small gray" data-act="up" data-id="' + c.id + '" ' + (i === 0 ? 'disabled' : '') + '>▲</button>' +
-                    '<button class="btn small gray" data-act="down" data-id="' + c.id + '" ' + (i === clients.length - 1 ? 'disabled' : '') + '>▼</button>' +
-                    '<button class="btn small gray" data-act="toggle" data-id="' + c.id + '">' + (on ? 'Sembunyi' : 'Tunjuk') + '</button>' +
+                    '<button class="btn small" data-act="open" data-id="' + c.id + '">Open</button>' +
+                    '<button class="btn small gray" data-act="toggle" data-id="' + c.id + '">' + (on ? 'Hide' : 'Show') + '</button>' +
                     '<button class="btn small gray" data-act="edit" data-id="' + c.id + '">Edit</button>' +
-                    '<button class="btn small danger" data-act="del" data-id="' + c.id + '">Padam</button>' +
+                    '<button class="btn small danger" data-act="del" data-id="' + c.id + '">Delete</button>' +
                 '</div>' +
             '</div>';
         });
@@ -394,8 +400,8 @@
     function refreshAll() {
         getList().then(render).catch(function (err) {
             document.getElementById('clientList').innerHTML =
-                '<div class="sub" style="color:#e07b7b;font-size:13px;">Ralat: ' + (err.message || 'tidak diketahui') + '</div>';
-            toast('Ralat muat senarai: ' + err.message);
+                '<div class="sub" style="color:#e07b7b;font-size:13px;">Error: ' + (err.message || 'unknown') + '</div>';
+            toast('Error loading list: ' + err.message);
         });
     }
 
@@ -409,26 +415,10 @@
             var c = state.list.clients.find(function (x) { return x.id === id; });
             var base = location.pathname.replace(/\/[^\/]*$/, '/');
             window.open(location.origin + base + c.path + '/');
-        } else if (act === 'copy') {
-            var c2 = state.list.clients.find(function (x) { return x.id === id; });
-            var base2 = location.pathname.replace(/\/[^\/]*$/, '/');
-            var u = location.origin + base2 + c2.path + '/';
-            (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function () { toast('Link disalin'); }, function () { prompt('Salin link:', u); });
-        } else if (act === 'up') moveClient(id, -1);
-        else if (act === 'down') moveClient(id, 1);
-        else if (act === 'toggle') toggleClient(id);
+        } else if (act === 'toggle') toggleClient(id);
         else if (act === 'edit') openEdit(id);
         else if (act === 'del') deleteClient(id);
     });
-
-    function moveClient(id, dir) {
-        var clients = state.list.clients;
-        var i = clients.findIndex(function (x) { return x.id === id; });
-        var j = i + dir;
-        if (i < 0 || j < 0 || j >= clients.length) return;
-        var tmp = clients[i]; clients[i] = clients[j]; clients[j] = tmp;
-        run(commitList('Susun semula menu'), refreshAll);
-    }
 
     function toggleClient(id) {
         var c = state.list.clients.find(function (x) { return x.id === id; });
@@ -440,7 +430,7 @@
     function deleteClient(id) {
         var c = state.list.clients.find(function (x) { return x.id === id; });
         if (!c) return;
-        if (!confirm('Padam client "' + c.name + '" dan semua fail folder /' + c.path + '/ ?')) return;
+        if (!confirm('Delete client "' + c.name + '" and all files in /' + c.path + '/ ?')) return;
         var deletes = [c.path + '/index.html', c.path + '/manifest.json', c.path + '/sw.js', c.path + '/icon-192.png', c.path + '/icon-512.png'];
         state.list.clients = state.list.clients.filter(function (x) { return x.id !== id; });
         run(commitList('Delete client: ' + c.name, null, deletes), refreshAll);
@@ -511,10 +501,10 @@
         var url = document.getElementById('fUrl').value.trim();
         var st = document.getElementById('status2');
         st.className = ''; st.textContent = '';
-        if (!name || !path || !url) { st.className = 'err'; st.textContent = 'Isi nama, path & GAS url.'; return; }
-        if (!/^[a-z0-9\-_]+$/.test(path)) { st.className = 'err'; st.textContent = 'Path hanya a-z, 0-9, -, _ (tanpa ruang).'; return; }
-        if (!state.addIcon) { st.className = 'err'; st.textContent = 'Pilih ikon dahulu.'; return; }
-        if ((state.list.clients || []).some(function (c) { return c.id === path; })) { st.className = 'err'; st.textContent = 'Path/ID sudah wujud.'; return; }
+        if (!name || !path || !url) { st.className = 'err'; st.textContent = 'Enter name, path & GAS URL.'; return; }
+        if (!/^[a-z0-9\-_]+$/.test(path)) { st.className = 'err'; st.textContent = 'Path: lowercase letters, numbers, -, _ only (no spaces).'; return; }
+        if (!state.addIcon) { st.className = 'err'; st.textContent = 'Select an icon first.'; return; }
+        if ((state.list.clients || []).some(function (c) { return c.id === path; })) { st.className = 'err'; st.textContent = 'Path/ID already exists.'; return; }
 
         var files = buildClientFiles(path, name, url, state.addIcon.small.split(',')[1], state.addIcon.large.split(',')[1]);
         state.list.clients.push({ id: path, path: path, name: name, description: desc, icon: './' + path + '/icon-192.png', url: url, visible: true });
@@ -523,11 +513,11 @@
         run(commitAll(files, null, 'Add client: ' + name), function () {
             var base = location.pathname.replace(/\/[^\/]*$/, '/');
             st.className = 'ok';
-            st.textContent = 'Client "' + name + '" ditambah! Link: ' + location.origin + base + path + '/';
+            st.textContent = 'Client "' + name + '" added! Link: ' + location.origin + base + path + '/';
             document.getElementById('fName').value = ''; document.getElementById('fDesc').value = '';
             document.getElementById('fPath').value = ''; document.getElementById('fUrl').value = '';
             document.getElementById('fIcon').value = ''; state.addIcon = null;
-            document.getElementById('addIconPreview').textContent = 'preview';
+            document.getElementById('addIconPreview').textContent = 'Preview';
             refreshAll();
         });
     });
@@ -543,7 +533,7 @@
         document.getElementById('eUrl').value = c.url || '';
         document.getElementById('eIcon').value = '';
         state.editIcon = null;
-        document.getElementById('editIconPreview').textContent = 'preview';
+        document.getElementById('editIconPreview').textContent = 'Preview';
         document.getElementById('status3').className = ''; document.getElementById('status3').textContent = '';
         document.getElementById('editCard').classList.remove('hidden');
         document.getElementById('editCard').scrollIntoView({ behavior: 'smooth' });
@@ -571,7 +561,7 @@
         }
         run(commitList('Update client: ' + name, extra), function () {
             document.getElementById('editCard').classList.add('hidden');
-            toast('Client "' + name + '" dikemaskini');
+            toast('Client "' + name + '" updated');
             refreshAll();
         });
     });
@@ -584,7 +574,7 @@
     function loadMenu() {
         if (state.list) {
             document.getElementById('mTitle').value = state.list.menuTitle || 'Olla Apps';
-            document.getElementById('mSubtitle').value = state.list.menuSubtitle || 'Pilih sistem untuk dibuka';
+            document.getElementById('mSubtitle').value = state.list.menuSubtitle || 'Select a system to open';
         }
     }
     document.getElementById('saveMenuBtn').addEventListener('click', function () {
@@ -593,7 +583,7 @@
         state.list = state.list || {};
         state.list.menuTitle = t || 'Olla Apps';
         state.list.menuSubtitle = s || '';
-        run(commitList('Update menu settings'), function () { toast('Menu dikemaskini'); refreshAll(); });
+        run(commitList('Update menu settings'), function () { toast('Menu updated'); refreshAll(); });
     });
     </script>
 </body>

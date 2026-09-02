@@ -52,10 +52,10 @@
 <body>
     <div class="header">
         <h1 id="menuTitle">Olla Apps</h1>
-        <p id="menuSubtitle">Memuatkan…</p>
+        <p id="menuSubtitle">Loading…</p>
     </div>
     <div class="grid" id="list"></div>
-    <div class="note" id="note">Tiada sistem? Hubungi pentadbir.</div>
+    <div class="note" id="note">No systems registered? Contact your administrator.</div>
 
     <script>
         (function () {
@@ -69,14 +69,14 @@
                 .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
                 .then(function (data) {
                     var title = (data && data.menuTitle) || 'Olla Apps';
-                    var subtitle = (data && data.menuSubtitle) || 'Pilih sistem untuk dibuka';
+                    var subtitle = (data && data.menuSubtitle) || 'Select a system to open';
                     if (titleEl) { titleEl.textContent = title; document.title = title; }
                     if (subEl) subEl.textContent = subtitle;
 
                     var clients = ((data && data.clients) || []).filter(function (c) { return c.visible !== false; });
 
                     if (!clients.length) {
-                        grid.innerHTML = '<div class="card"><div class="meta"><div class="desc">Tiada sistem di daftar.</div></div></div>';
+                        grid.innerHTML = '<div class="card"><div class="meta"><div class="desc">No systems registered.</div></div></div>';
                         return;
                     }
 
@@ -99,8 +99,8 @@
                     grid.innerHTML = html;
                 })
                 .catch(function () {
-                    subEl.textContent = 'Ralat memuat senarai.';
-                    grid.innerHTML = '<div class="card"><div class="meta"><div class="desc">Ralat memuat senarai.</div></div></div>';
+                    subEl.textContent = 'Failed to load the list.';
+                    grid.innerHTML = '<div class="card"><div class="meta"><div class="desc">Failed to load the list.</div></div></div>';
                 });
         })();
     </script>
