@@ -157,6 +157,9 @@
             <!-- Clients -->
             <div class="card">
                 <h2>Clients</h2>
+                <div class="field">
+                    <input type="text" id="searchClient" placeholder="Search by system name…" autocomplete="off">
+                </div>
                 <div id="clientList"></div>
             </div>
 
@@ -409,9 +412,13 @@
 
         var base = location.pathname.replace(/\/[^\/]*$/, '/');
         var origin = location.origin;
+
+        var q = (document.getElementById('searchClient').value || '').trim().toLowerCase();
+        var shown = clients.filter(function (c) { return !q || (c.name || '').toLowerCase().indexOf(q) !== -1; });
+
         var html = '';
-        if (!clients.length) html = '<div class="sub" style="color:#8a8aa0;font-size:13px;">No clients yet.</div>';
-        clients.forEach(function (c) {
+        if (!shown.length) html = '<div class="sub" style="color:#8a8aa0;font-size:13px;">' + (clients.length ? 'No matches.' : 'No clients yet.') + '</div>';
+        shown.forEach(function (c) {
             var icon = c.icon ? (c.icon.indexOf('http') === 0 ? c.icon : origin + base + c.icon.replace(/^\.?\//, '')) : origin + base + 'icon-192.png';
             var on = c.visible !== false;
             html += '<div class="row">' +
@@ -441,6 +448,11 @@
             toast('Error loading list: ' + err.message);
         });
     }
+
+    // Live filter as the user types
+    document.getElementById('searchClient').addEventListener('input', function () {
+        if (state.list) render();
+    });
 
     // ===== ACTIONS =====
     document.getElementById('clientList').addEventListener('click', function (e) {
