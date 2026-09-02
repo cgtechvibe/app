@@ -11,7 +11,7 @@
 window.ADMIN_CONFIG = {
     // GitHub repo
     OWNER: 'cgtechvibe',
-    REPO: 'famtree',
+    REPO: 'app',
     BRANCH: 'main',
 
     // GitHub token — biarkan KOSONG. Masuk pada masa login.

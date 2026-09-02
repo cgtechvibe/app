@@ -230,7 +230,7 @@
             <div class="field">
                 <label>Folder Path</label>
                 <input type="text" id="fPath" placeholder="e.g. bnb2 (lowercase letters/numbers/-/_ only)">
-                <div class="hint">Link becomes .../famtree/&lt;path&gt;/</div>
+                <div class="hint">Link becomes .../app/client/&lt;path&gt;/</div>
             </div>
             <div class="field">
                 <label>GAS Exec URL</label>
@@ -263,6 +263,7 @@
     if (token) document.getElementById('tokenInput').setAttribute('placeholder', 'Token saved — leave blank');
 
     var state = { list: null, editingId: null, addIcon: null, editIcon: null };
+    var CLIENT_DIR = 'client';
 
     // ===== UTIL =====
     function b64decode(b64) {
@@ -499,7 +500,7 @@
         if (act === 'open') {
             var c = state.list.clients.find(function (x) { return x.id === id; });
             var base = location.pathname.replace(/\/[^\/]*$/, '/');
-            window.open(location.origin + base + c.path + '/');
+            window.open(location.origin + base + CLIENT_DIR + '/' + c.path + '/');
         } else if (act === 'toggle') toggleClient(id);
         else if (act === 'edit') openEdit(id);
         else if (act === 'del') deleteClient(id);
@@ -515,8 +516,8 @@
     function deleteClient(id) {
         var c = state.list.clients.find(function (x) { return x.id === id; });
         if (!c) return;
-        if (!confirm('Delete client "' + c.name + '" and all files in /' + c.path + '/ ?')) return;
-        var deletes = [c.path + '/index.html', c.path + '/manifest.json', c.path + '/sw.js', c.path + '/icon-192.png', c.path + '/icon-512.png'];
+        if (!confirm('Delete client "' + c.name + '" and all files in /' + CLIENT_DIR + '/' + c.path + '/ ?')) return;
+        var deletes = [CLIENT_DIR + '/' + c.path + '/index.html', CLIENT_DIR + '/' + c.path + '/manifest.json', CLIENT_DIR + '/' + c.path + '/sw.js', CLIENT_DIR + '/' + c.path + '/icon-192.png', CLIENT_DIR + '/' + c.path + '/icon-512.png'];
         state.list.clients = state.list.clients.filter(function (x) { return x.id !== id; });
         run(commitList('Delete client: ' + c.name, null, deletes), refreshAll);
     }
@@ -562,11 +563,11 @@
             "self.addEventListener('fetch', (e) => { if (!e.request.url.startsWith(self.location.origin)) return; e.respondWith(fetch(e.request).then((r) => { const c = r.clone(); caches.open(CACHE_NAME).then((ca) => ca.put(e.request, c)); return r; }).catch(() => caches.match(e.request))); });"
         ].join('\n');
         return [
-            { path: path + '/index.html', content: indexHtml },
-            { path: path + '/manifest.json', content: JSON.stringify(manifest, null, 2) },
-            { path: path + '/sw.js', content: sw },
-            { path: path + '/icon-192.png', content: icon192, binary: true },
-            { path: path + '/icon-512.png', content: icon512, binary: true }
+            { path: CLIENT_DIR + '/' + path + '/index.html', content: indexHtml },
+            { path: CLIENT_DIR + '/' + path + '/manifest.json', content: JSON.stringify(manifest, null, 2) },
+            { path: CLIENT_DIR + '/' + path + '/sw.js', content: sw },
+            { path: CLIENT_DIR + '/' + path + '/icon-192.png', content: icon192, binary: true },
+            { path: CLIENT_DIR + '/' + path + '/icon-512.png', content: icon512, binary: true }
         ];
     }
 
@@ -594,13 +595,13 @@
         if ((state.list.clients || []).some(function (c) { return c.id === path; })) { st.className = 'err'; st.textContent = 'Path/ID already exists.'; return; }
 
         var files = buildClientFiles(path, name, url, state.addIcon.small.split(',')[1], state.addIcon.large.split(',')[1]);
-        state.list.clients.push({ id: path, path: path, name: name, description: desc, clientName: cname, phone: ph, icon: './' + path + '/icon-192.png', url: url, visible: true });
+        state.list.clients.push({ id: path, path: path, name: name, description: desc, clientName: cname, phone: ph, icon: './' + CLIENT_DIR + '/' + path + '/icon-192.png', url: url, visible: true });
         files.push({ path: 'list.json', content: JSON.stringify(state.list, null, 2), binary: false });
 
         run(commitAll(files, null, 'Add client: ' + name), function () {
             var base = location.pathname.replace(/\/[^\/]*$/, '/');
             st.className = 'ok';
-            st.textContent = 'Client "' + name + '" added! Link: ' + location.origin + base + path + '/';
+            st.textContent = 'Client "' + name + '" added! Link: ' + location.origin + base + CLIENT_DIR + '/' + path + '/';
             document.getElementById('fName').value = ''; document.getElementById('fDesc').value = '';
             document.getElementById('fClientName').value = ''; document.getElementById('fPhone').value = '';
             document.getElementById('fPath').value = ''; document.getElementById('fUrl').value = '';
@@ -650,8 +651,8 @@
 
         var extra = [];
         if (state.editIcon) {
-            extra.push({ path: c.path + '/icon-192.png', content: state.editIcon.small.split(',')[1], binary: true });
-            extra.push({ path: c.path + '/icon-512.png', content: state.editIcon.large.split(',')[1], binary: true });
+            extra.push({ path: CLIENT_DIR + '/' + c.path + '/icon-192.png', content: state.editIcon.small.split(',')[1], binary: true });
+            extra.push({ path: CLIENT_DIR + '/' + c.path + '/icon-512.png', content: state.editIcon.large.split(',')[1], binary: true });
         }
         run(commitList('Update client: ' + name, extra), function () {
             document.getElementById('editCard').classList.add('hidden');

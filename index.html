@@ -60,6 +60,7 @@
     <script>
         (function () {
             var base = location.pathname.replace(/\/[^\/]*$/, '/');
+            var clientDir = 'client';
             var titleEl = document.getElementById('menuTitle');
             var subEl = document.getElementById('menuSubtitle');
             var grid = document.getElementById('list');
@@ -82,7 +83,7 @@
 
                     var html = '';
                     clients.forEach(function (c) {
-                        var href = base + c.path + '/';
+                        var href = base + clientDir + '/' + c.path + '/';
                         var icon = c.icon
                             ? (c.icon.indexOf('http') === 0 ? c.icon : base + c.icon.replace(/^\.?\//, ''))
                             : base + 'icon-192.png';
