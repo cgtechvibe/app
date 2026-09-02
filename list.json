@@ -1,6 +1,6 @@
 {
-  "menuTitle": "demo",
-  "menuSubtitle": "test",
+  "menuTitle": "testing",
+  "menuSubtitle": "demo",
   "clients": [
     {
       "id": "alpha",
