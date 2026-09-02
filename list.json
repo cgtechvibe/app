@@ -21,6 +21,17 @@
       "icon": "./client/hotelku/icon-192.png",
       "url": "https://script.google.com/macros/s/AKfycbwZg4ezGallw-Vo1EfEb3iTub0eKykMh-ryZGhe1Vvi2CFgx7SmUUz2woIMMnjRol7giw/exec",
       "visible": true
+    },
+    {
+      "id": "cgtechvibeapi",
+      "path": "cgtechvibeapi",
+      "name": "CG API Manager",
+      "description": "Manage API",
+      "clientName": "cgtechvibe",
+      "phone": "",
+      "icon": "./client/cgtechvibeapi/icon-192.png",
+      "url": "https://script.google.com/macros/s/AKfycbwiiCUwwG2qSzUk6w7riYoqd4IQGMK7Ejw6AmNWTjtpDm69OogNFyENY9fK4F5PxHyB/exec",
+      "visible": true
     }
   ]
 }
