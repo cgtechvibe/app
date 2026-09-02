@@ -20,7 +20,9 @@
       "description": "Homestay Management",
       "icon": "./client/hotelku/icon-192.png",
       "url": "https://script.google.com/macros/s/AKfycbwZg4ezGallw-Vo1EfEb3iTub0eKykMh-ryZGhe1Vvi2CFgx7SmUUz2woIMMnjRol7giw/exec",
-      "visible": true
+      "visible": true,
+      "clientName": "cgtechvibe",
+      "phone": ""
     },
     {
       "id": "cgtechvibeapi",
