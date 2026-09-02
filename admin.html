@@ -158,7 +158,7 @@
             <div class="card">
                 <h2>Clients</h2>
                 <div class="field">
-                    <input type="text" id="searchClient" placeholder="Search by system name…" autocomplete="off">
+                    <input type="text" id="searchClient" placeholder="Search by name, path, client or phone…" autocomplete="off">
                 </div>
                 <div id="clientList"></div>
             </div>
@@ -173,6 +173,14 @@
                 <div class="field">
                     <label>Description</label>
                     <input type="text" id="eDesc">
+                </div>
+                <div class="field">
+                    <label>Client Name</label>
+                    <input type="text" id="eClientName" placeholder="e.g. Ahmad bin Ali">
+                </div>
+                <div class="field">
+                    <label>Phone Number</label>
+                    <input type="tel" id="ePhone" placeholder="e.g. 012-3456789" inputmode="tel">
                 </div>
                 <div class="field">
                     <label>GAS Exec URL</label>
@@ -210,6 +218,14 @@
             <div class="field">
                 <label>Description</label>
                 <input type="text" id="fDesc" placeholder="e.g. Homestay management">
+            </div>
+            <div class="field">
+                <label>Client Name</label>
+                <input type="text" id="fClientName" placeholder="e.g. Ahmad bin Ali">
+            </div>
+            <div class="field">
+                <label>Phone Number</label>
+                <input type="tel" id="fPhone" placeholder="e.g. 012-3456789" inputmode="tel">
             </div>
             <div class="field">
                 <label>Folder Path</label>
@@ -414,19 +430,31 @@
         var origin = location.origin;
 
         var q = (document.getElementById('searchClient').value || '').trim().toLowerCase();
-        var shown = clients.filter(function (c) { return !q || (c.name || '').toLowerCase().indexOf(q) !== -1; });
+        var shown = clients.filter(function (c) {
+            if (!q) return true;
+            var hay = ((c.name || '') + ' ' + (c.path || '') + ' ' + (c.clientName || '') + ' ' + (c.phone || '')).toLowerCase();
+            return hay.indexOf(q) !== -1;
+        });
 
         var html = '';
         if (!shown.length) html = '<div class="sub" style="color:#8a8aa0;font-size:13px;">' + (clients.length ? 'No matches.' : 'No clients yet.') + '</div>';
         shown.forEach(function (c) {
             var icon = c.icon ? (c.icon.indexOf('http') === 0 ? c.icon : origin + base + c.icon.replace(/^\.?\//, '')) : origin + base + 'icon-192.png';
             var on = c.visible !== false;
+            var contact = '';
+            if (c.clientName || c.phone) {
+                var bits = [];
+                if (c.clientName) bits.push(c.clientName);
+                if (c.phone) bits.push(c.phone);
+                contact = '<div class="sub">' + bits.join(' · ') + '</div>';
+            }
             html += '<div class="row">' +
                 '<div class="row-top">' +
                     '<div class="thumb"><img src="' + icon + '" alt=""></div>' +
                     '<div class="meta">' +
                         '<div class="name">' + (c.name || 'App') + '</div>' +
                         '<div class="sub">' + (c.path || '') + (c.description ? ' · ' + c.description : '') + '</div>' +
+                        contact +
                         '<span class="tag ' + (on ? 'on' : 'off') + '">' + (on ? 'Visible' : 'Hidden') + '</span>' +
                     '</div>' +
                 '</div>' +
@@ -546,6 +574,8 @@
     document.getElementById('addBtn').addEventListener('click', function () {
         var name = document.getElementById('fName').value.trim();
         var desc = document.getElementById('fDesc').value.trim();
+        var cname = document.getElementById('fClientName').value.trim();
+        var ph = document.getElementById('fPhone').value.trim();
         var path = document.getElementById('fPath').value.trim().toLowerCase();
         var url = document.getElementById('fUrl').value.trim();
         var st = document.getElementById('status2');
@@ -556,7 +586,7 @@
         if ((state.list.clients || []).some(function (c) { return c.id === path; })) { st.className = 'err'; st.textContent = 'Path/ID already exists.'; return; }
 
         var files = buildClientFiles(path, name, url, state.addIcon.small.split(',')[1], state.addIcon.large.split(',')[1]);
-        state.list.clients.push({ id: path, path: path, name: name, description: desc, icon: './' + path + '/icon-192.png', url: url, visible: true });
+        state.list.clients.push({ id: path, path: path, name: name, description: desc, clientName: cname, phone: ph, icon: './' + path + '/icon-192.png', url: url, visible: true });
         files.push({ path: 'list.json', content: JSON.stringify(state.list, null, 2), binary: false });
 
         run(commitAll(files, null, 'Add client: ' + name), function () {
@@ -564,6 +594,7 @@
             st.className = 'ok';
             st.textContent = 'Client "' + name + '" added! Link: ' + location.origin + base + path + '/';
             document.getElementById('fName').value = ''; document.getElementById('fDesc').value = '';
+            document.getElementById('fClientName').value = ''; document.getElementById('fPhone').value = '';
             document.getElementById('fPath').value = ''; document.getElementById('fUrl').value = '';
             document.getElementById('fIcon').value = ''; state.addIcon = null;
             document.getElementById('addIconPreview').textContent = 'Preview';
@@ -581,6 +612,8 @@
         document.getElementById('editTitle').textContent = 'Edit: ' + c.name;
         document.getElementById('eName').value = c.name || '';
         document.getElementById('eDesc').value = c.description || '';
+        document.getElementById('eClientName').value = c.clientName || '';
+        document.getElementById('ePhone').value = c.phone || '';
         document.getElementById('eUrl').value = c.url || '';
         document.getElementById('eIcon').value = '';
         state.editIcon = null;
@@ -602,8 +635,10 @@
         if (!c) return;
         var name = document.getElementById('eName').value.trim() || c.name;
         var desc = document.getElementById('eDesc').value.trim();
+        var cname = document.getElementById('eClientName').value.trim();
+        var ph = document.getElementById('ePhone').value.trim();
         var url = document.getElementById('eUrl').value.trim() || c.url;
-        c.name = name; c.description = desc; c.url = url;
+        c.name = name; c.description = desc; c.clientName = cname; c.phone = ph; c.url = url;
 
         var extra = [];
         if (state.editIcon) {
