@@ -9,7 +9,9 @@
       "description": "Family tree management system",
       "icon": "./alpha/icon-192.png",
       "url": "https://script.google.com/macros/s/AKfycby6kAWln7xxajIZTT4hzDEXa44eZ9n21kygGQTq5ASCvcviSaj5GdiTzmxflbsFHiIF/exec",
-      "visible": true
+      "visible": true,
+      "clientName": "charles gokin",
+      "phone": "01125816662"
     },
     {
       "id": "hotelku",
