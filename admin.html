@@ -348,6 +348,23 @@
     }
 
     // ===== LOGIN =====
+    function verifyToken(t) {
+        return fetch('https://api.github.com/repos/' + O.owner + '/' + O.repo, {
+            headers: { 'Authorization': 'token ' + t, 'Accept': 'application/vnd.github.v3+json' }
+        }).then(function (r) {
+            if (r.status === 401 || r.status === 403) return false;
+            if (!r.ok) return r.json().then(function (e) { throw new Error((e && e.message) || ('HTTP ' + r.status)); });
+            return true;
+        });
+    }
+    function enterAdmin() {
+        document.getElementById('loginView').classList.add('hidden');
+        document.getElementById('adminView').classList.remove('hidden');
+        document.getElementById('headerBtns').classList.remove('hidden');
+        document.getElementById('status').textContent = '';
+        refreshAll();
+    }
+
     document.getElementById('loginBtn').addEventListener('click', function () {
         var p = document.getElementById('pinInput').value;
         var t = document.getElementById('tokenInput').value || token;
@@ -357,25 +374,15 @@
 
         // Verify token first (GET /repos = public read, no write) before entering
         status.className = ''; status.textContent = 'Verifying token…';
-        fetch('https://api.github.com/repos/' + O.owner + '/' + O.repo, {
-            headers: { 'Authorization': 'token ' + t, 'Accept': 'application/vnd.github.v3+json' }
-        }).then(function (r) {
-            if (r.status === 401 || r.status === 403) {
+        verifyToken(t).then(function (ok) {
+            if (ok !== true) {
                 status.className = 'err';
                 status.textContent = 'Invalid or expired token. Enter a new correct token.';
-                return null;
+                return;
             }
-            if (!r.ok) return r.json().then(function (e) { throw new Error((e && e.message) || ('HTTP ' + r.status)); });
-            return true;
-        }).then(function (ok) {
-            if (ok !== true) return;
             token = t;
             try { localStorage.setItem(LS_TOKEN_KEY, t); } catch (e) {}
-            document.getElementById('loginView').classList.add('hidden');
-            document.getElementById('adminView').classList.remove('hidden');
-            document.getElementById('headerBtns').classList.remove('hidden');
-            document.getElementById('status').textContent = '';
-            refreshAll();
+            enterAdmin();
         }).catch(function (err) {
             status.className = 'err';
             status.textContent = 'Login error: ' + err.message;
@@ -657,6 +664,24 @@
         document.getElementById('editCard').classList.add('hidden');
         state.editingId = null; state.editIcon = null;
     });
+
+    // ===== AUTO-LOGIN =====
+    // Keep the session alive across refreshes: token was already PIN-verified
+    // on this device, so re-enter the panel straight away if it still works.
+    if (token) {
+        var st = document.getElementById('status');
+        st.textContent = 'Re-verifying saved token…';
+        verifyToken(token).then(function (ok) {
+            if (ok === true) { enterAdmin(); }
+            else {
+                st.className = 'err';
+                st.textContent = 'Saved token invalid or expired — enter a new token.';
+            }
+        }).catch(function (err) {
+            st.className = 'err';
+            st.textContent = 'Login error: ' + err.message;
+        });
+    }
     </script>
 </body>
 </html>
