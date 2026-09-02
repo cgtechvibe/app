@@ -91,6 +91,30 @@
             padding: 7px 10px; border-radius: 8px; margin-right: 8px; cursor: pointer;
         }
         .toast { position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); background: #2a2a3a; border: 1px solid #444; color: #eee; padding: 10px 18px; border-radius: 10px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.5); z-index: 50; }
+
+        .header-btns { display: flex; gap: 8px; align-items: center; }
+
+        /* Add-client modal */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 60;
+            background: rgba(0, 0, 0, 0.62);
+            display: flex; align-items: flex-end; justify-content: center;
+        }
+        @media (min-width: 600px) { .modal-overlay { align-items: center; } }
+        .modal {
+            background: #1e1e2a; border: 1px solid #2c2c3a; border-radius: 16px 16px 0 0;
+            width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto;
+            padding: clamp(16px, 3vw, 22px);
+        }
+        @media (min-width: 600px) { .modal { border-radius: 16px; } }
+        .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .modal-head h2 { font-size: 16px; font-weight: 600; }
+        .modal-close {
+            background: #26263a; border: 1px solid #3a3a50; color: #ccc;
+            width: 32px; height: 32px; border-radius: 8px; font-size: 18px; line-height: 1;
+            cursor: pointer;
+        }
+        .modal-close:hover { background: #33334a; color: #fff; }
     </style>
 </head>
 <body>
@@ -99,7 +123,10 @@
             <h1 id="title">Admin Panel</h1>
             <div class="mini">Manage PWA clients</div>
         </div>
-        <button class="btn small gray hidden" id="logOutBtn" style="width:auto; padding:9px 14px;">Log Out</button>
+        <div class="header-btns hidden" id="headerBtns">
+            <button class="btn small" id="addClientBtn" style="width:auto; padding:9px 14px;">+ Add</button>
+            <button class="btn small gray" id="logOutBtn" style="width:auto; padding:9px 14px;">Log Out</button>
+        </div>
     </div>
 
     <div class="panel">
@@ -133,37 +160,6 @@
                 <div id="clientList"></div>
             </div>
 
-            <!-- Add client -->
-            <div class="card">
-                <h2>Add New Client</h2>
-                <div class="field">
-                    <label>System Name</label>
-                    <input type="text" id="fName" placeholder="e.g. BNBMan">
-                </div>
-                <div class="field">
-                    <label>Description</label>
-                    <input type="text" id="fDesc" placeholder="e.g. Homestay management">
-                </div>
-                <div class="field">
-                    <label>Folder Path</label>
-                    <input type="text" id="fPath" placeholder="e.g. bnb2 (lowercase letters/numbers/-/_ only)">
-                    <div class="hint">Link becomes .../famtree/&lt;path&gt;/</div>
-                </div>
-                <div class="field">
-                    <label>GAS Exec URL</label>
-                    <input type="url" id="fUrl" placeholder="https://script.google.com/macros/s/.../exec">
-                </div>
-                <div class="field">
-                    <label>Icon (1 image — auto resize to 192 &amp; 512)</label>
-                    <div class="upload">
-                        <div class="box" id="addIconPreview">Preview</div>
-                        <input type="file" id="fIcon" accept="image/*">
-                    </div>
-                </div>
-                <button class="btn" id="addBtn">Add Client</button>
-                <div id="status2"></div>
-            </div>
-
             <!-- Edit client (hidden) -->
             <div class="card hidden" id="editCard">
                 <h2 id="editTitle">Edit Client</h2>
@@ -195,6 +191,42 @@
         </div>
 
         <div class="msg hidden" id="workingMsg" style="text-align:center; color:#aaa; margin:14px 0; font-size:13.5px;">Updating GitHub… don't close the tab</div>
+    </div>
+
+    <!-- Add New Client modal -->
+    <div class="modal-overlay hidden" id="addModal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2>Add New Client</h2>
+                <button class="modal-close" id="closeAddModal" aria-label="Close">×</button>
+            </div>
+            <div class="field">
+                <label>System Name</label>
+                <input type="text" id="fName" placeholder="e.g. BNBMan">
+            </div>
+            <div class="field">
+                <label>Description</label>
+                <input type="text" id="fDesc" placeholder="e.g. Homestay management">
+            </div>
+            <div class="field">
+                <label>Folder Path</label>
+                <input type="text" id="fPath" placeholder="e.g. bnb2 (lowercase letters/numbers/-/_ only)">
+                <div class="hint">Link becomes .../famtree/&lt;path&gt;/</div>
+            </div>
+            <div class="field">
+                <label>GAS Exec URL</label>
+                <input type="url" id="fUrl" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+            <div class="field">
+                <label>Icon (1 image — auto resize to 192 &amp; 512)</label>
+                <div class="upload">
+                    <div class="box" id="addIconPreview">Preview</div>
+                    <input type="file" id="fIcon" accept="image/*">
+                </div>
+            </div>
+            <button class="btn" id="addBtn">Add Client</button>
+            <div id="status2"></div>
+        </div>
     </div>
 
     <script>
@@ -321,7 +353,7 @@
             try { localStorage.setItem(LS_TOKEN_KEY, t); } catch (e) {}
             document.getElementById('loginView').classList.add('hidden');
             document.getElementById('adminView').classList.remove('hidden');
-            document.getElementById('logOutBtn').classList.remove('hidden');
+            document.getElementById('headerBtns').classList.remove('hidden');
             document.getElementById('status').textContent = '';
             refreshAll();
         }).catch(function (err) {
@@ -332,7 +364,27 @@
     document.getElementById('logOutBtn').addEventListener('click', function () {
         document.getElementById('adminView').classList.add('hidden');
         document.getElementById('loginView').classList.remove('hidden');
-        document.getElementById('logOutBtn').classList.add('hidden');
+        document.getElementById('headerBtns').classList.add('hidden');
+        closeAddModal();
+    });
+
+    // ===== ADD MODAL =====
+    function openAddModal() {
+        document.getElementById('addModal').classList.remove('hidden');
+        setTimeout(function () { document.getElementById('fName').focus(); }, 50);
+    }
+    function closeAddModal() {
+        document.getElementById('addModal').classList.add('hidden');
+        var st = document.getElementById('status2');
+        st.className = ''; st.textContent = '';
+    }
+    document.getElementById('addClientBtn').addEventListener('click', openAddModal);
+    document.getElementById('closeAddModal').addEventListener('click', closeAddModal);
+    document.getElementById('addModal').addEventListener('click', function (e) {
+        if (e.target === this) closeAddModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeAddModal();
     });
 
     function busy(on, text) {
@@ -503,6 +555,8 @@
             document.getElementById('fPath').value = ''; document.getElementById('fUrl').value = '';
             document.getElementById('fIcon').value = ''; state.addIcon = null;
             document.getElementById('addIconPreview').textContent = 'Preview';
+            toast('Client "' + name + '" added');
+            closeAddModal();
             refreshAll();
         });
     });
