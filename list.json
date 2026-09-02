@@ -1,16 +1,7 @@
 {
-  "menuTitle": "Olla Apps",
-  "menuSubtitle": "Select a system to open",
+  "menuTitle": "demo",
+  "menuSubtitle": "test",
   "clients": [
-    {
-      "id": "hotelku",
-      "path": "hotelku",
-      "name": "BNBMan",
-      "description": "Homestay Management",
-      "icon": "./hotelku/icon-192.png",
-      "url": "https://script.google.com/macros/s/AKfycbwZg4ezGallw-Vo1EfEb3iTub0eKykMh-ryZGhe1Vvi2CFgx7SmUUz2woIMMnjRol7giw/exec",
-      "visible": true
-    },
     {
       "id": "alpha",
       "path": "alpha",
@@ -18,6 +9,15 @@
       "description": "Family tree management system",
       "icon": "./alpha/icon-192.png",
       "url": "https://script.google.com/macros/s/AKfycby6kAWln7xxajIZTT4hzDEXa44eZ9n21kygGQTq5ASCvcviSaj5GdiTzmxflbsFHiIF/exec",
+      "visible": true
+    },
+    {
+      "id": "hotelku",
+      "path": "hotelku",
+      "name": "BNBMan",
+      "description": "Homestay Management",
+      "icon": "./hotelku/icon-192.png",
+      "url": "https://script.google.com/macros/s/AKfycbwZg4ezGallw-Vo1EfEb3iTub0eKykMh-ryZGhe1Vvi2CFgx7SmUUz2woIMMnjRol7giw/exec",
       "visible": true
     }
   ]
