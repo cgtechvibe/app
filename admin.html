@@ -317,8 +317,9 @@
     }
     function getList() {
         // Read list.json without auth — always succeeds for a public repo,
-        // even if the stored token is old or revoked.
-        return gh('GET', '/contents/list.json', null, { public: true }).then(function (d) {
+        // even if the stored token is old or revoked. Cache-buster defeats
+        // GitHub CDN serving stale content right after a commit.
+        return gh('GET', '/contents/list.json?ref=' + O.branch + '&_=' + Date.now(), null, { public: true }).then(function (d) {
             state.list = JSON.parse(b64decode(d.content));
             return state.list;
         });
@@ -648,6 +649,7 @@
         run(commitList('Update client: ' + name, extra), function () {
             document.getElementById('editCard').classList.add('hidden');
             toast('Client "' + name + '" updated');
+            render();
             refreshAll();
         });
     });
