@@ -486,9 +486,14 @@
         });
     }
 
-    // Live filter as the user types
+    // Live filter as the user types (debounced — stays smooth over long lists,
+    // still searches the full client list, no pagination)
+    var searchTimer = null;
     document.getElementById('searchClient').addEventListener('input', function () {
-        if (state.list) render();
+        if (searchTimer) clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+            if (state.list) render();
+        }, 150);
     });
 
     // ===== ACTIONS =====
