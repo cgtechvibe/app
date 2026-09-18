@@ -45,6 +45,17 @@
       "icon": "./client/licenser/icon-192.png",
       "url": "https://script.google.com/macros/s/AKfycbyYS0eZPd9Cgm5SClaQcHvO8uyIsLwNUiG-jzlg3A8a9YAEmYdsWX41aCCfeJQ2RHOQVA/exec",
       "visible": true
+    },
+    {
+      "id": "docgen",
+      "path": "docgen",
+      "name": "DocGen",
+      "description": "Employee & Client Management",
+      "clientName": "cgtechvibe",
+      "phone": "01125816662",
+      "icon": "./client/docgen/icon-192.png",
+      "url": "https://script.google.com/macros/s/AKfycbz6LEMqSFtHntibjSMkom2MrdmMWc_I3wAxg4_BcGMWSw9UXzJOLuOGKG123wmzH1PCIg/exec",
+      "visible": true
     }
   ]
 }
