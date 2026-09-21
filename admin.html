@@ -631,10 +631,16 @@
         document.getElementById('eUrl').value = c.url || '';
         document.getElementById('eIcon').value = '';
         state.editIcon = null;
+        state.editIndex = null;
         document.getElementById('editIconPreview').textContent = 'Preview';
         document.getElementById('status3').className = ''; document.getElementById('status3').textContent = '';
         document.getElementById('editCard').classList.remove('hidden');
         document.getElementById('editCard').scrollIntoView({ behavior: 'smooth' });
+        // Read the wrapper's current index.html so a GAS URL change can also
+        // rewrite the baked-in iframe src (the app loads from there, not from list.json).
+        gh('GET', '/contents/' + CLIENT_DIR + '/' + c.path + '/index.html?ref=' + O.branch + '&_=' + Date.now(), null, { public: true })
+            .then(function (d) { state.editIndex = b64decode(d.content); })
+            .catch(function () { state.editIndex = null; });
     }
     document.getElementById('eIcon').addEventListener('change', function (e) {
         var file = e.target.files[0];
@@ -652,12 +658,23 @@
         var cname = document.getElementById('eClientName').value.trim();
         var ph = document.getElementById('ePhone').value.trim();
         var url = document.getElementById('eUrl').value.trim() || c.url;
+        var oldUrl = c.url;
         c.name = name; c.description = desc; c.clientName = cname; c.phone = ph; c.url = url;
 
         var extra = [];
         if (state.editIcon) {
             extra.push({ path: CLIENT_DIR + '/' + c.path + '/icon-192.png', content: state.editIcon.small.split(',')[1], binary: true });
             extra.push({ path: CLIENT_DIR + '/' + c.path + '/icon-512.png', content: state.editIcon.large.split(',')[1], binary: true });
+        }
+        // If the GAS Exec URL changed, rewrite the wrapper's iframe src too —
+        // the webapp loads from client/<path>/index.html, not from list.json.
+        var oldIndex = state.editIndex;
+        if (url !== oldUrl && oldIndex) {
+            var rewritten = oldIndex.replace(/(<iframe[^>]*?src=")[^"]*(")/, '$1' + url + '$2');
+            if (rewritten === oldIndex) {
+                rewritten = buildClientFiles(c.path, name, url, '', '')[0].content;
+            }
+            extra.push({ path: CLIENT_DIR + '/' + c.path + '/index.html', content: rewritten });
         }
         run(commitList('Update client: ' + name, extra), function () {
             document.getElementById('editCard').classList.add('hidden');
