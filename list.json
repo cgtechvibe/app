@@ -58,14 +58,14 @@
       "visible": true
     },
     {
-      "id": "4d",
-      "path": "4d",
-      "name": "4D Predict",
-      "description": "4D Number Prediction",
-      "clientName": "CG",
-      "phone": "0123456789",
-      "icon": "./client/4d/icon-192.png",
-      "url": "https://script.google.com/macros/s/AKfycbycodFNlNKFn1vKhI_vDdI_HBXzqnLy3mQtdFpGHrA_kKxbS5KdIXLSI-GKXqd44Z6g/exec",
+      "id": "dapen",
+      "path": "dapen",
+      "name": "DaPen (E-Census)",
+      "description": "Apps Untuk Bancian Penduduk (pendataan Penduduk)",
+      "clientName": "CGtechVibes",
+      "phone": "01125816662",
+      "icon": "./client/dapen/icon-192.png",
+      "url": "https://script.google.com/macros/s/AKfycbzZPwwTMJkhO6Z3UofDy09nGxaJJhOdYBrwRPagX_FWX_tgSwY8RJvAiRPksIs_AckYxg/exec",
       "visible": true
     }
   ]
