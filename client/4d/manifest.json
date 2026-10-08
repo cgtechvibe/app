@@ -1,6 +1,6 @@
 {
-  "name": "4D Predict",
-  "short_name": "4D Predict",
+  "name": "4DGen",
+  "short_name": "4DGen",
   "description": "",
   "start_url": "./index.html",
   "scope": "./",
