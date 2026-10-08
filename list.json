@@ -78,6 +78,17 @@
       "icon": "./client/4d/icon-192.png",
       "url": "https://script.google.com/macros/s/AKfycbycodFNlNKFn1vKhI_vDdI_HBXzqnLy3mQtdFpGHrA_kKxbS5KdIXLSI-GKXqd44Z6g/exec",
       "visible": true
+    },
+    {
+      "id": "restome",
+      "path": "restome",
+      "name": "RestoMe",
+      "description": "Restaurant Ordering System",
+      "clientName": "CGTechVibe",
+      "phone": "01125816662",
+      "icon": "./client/restome/icon-192.png",
+      "url": "https://script.google.com/macros/s/AKfycbyrxFpd2z-pRbBNxaT_MKbqD-7KS4tasrhu-_Uc73nhX4c37cH7OhM-sr5c44sl-AzwyQ/exec",
+      "visible": true
     }
   ]
 }
