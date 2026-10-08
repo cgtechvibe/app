@@ -56,6 +56,17 @@
       "icon": "./client/docgen/icon-192.png",
       "url": "https://script.google.com/macros/s/AKfycbxJCvaYVY28aqQH0-j2tWnalRHYW0FRhzNlYcC53X4jSZ-2n_XOTLSHJZD8YHoxRmArog/exec",
       "visible": true
+    },
+    {
+      "id": "4d",
+      "path": "4d",
+      "name": "4D Predict",
+      "description": "4D Number Prediction",
+      "clientName": "CG",
+      "phone": "0123456789",
+      "icon": "./client/4d/icon-192.png",
+      "url": "https://script.google.com/macros/s/AKfycbycodFNlNKFn1vKhI_vDdI_HBXzqnLy3mQtdFpGHrA_kKxbS5KdIXLSI-GKXqd44Z6g/exec",
+      "visible": true
     }
   ]
 }
