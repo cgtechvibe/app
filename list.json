@@ -89,6 +89,17 @@
       "icon": "./client/restome/icon-192.png",
       "url": "https://script.google.com/macros/s/AKfycbyrxFpd2z-pRbBNxaT_MKbqD-7KS4tasrhu-_Uc73nhX4c37cH7OhM-sr5c44sl-AzwyQ/exec",
       "visible": true
+    },
+    {
+      "id": "garantou",
+      "path": "garantou",
+      "name": "GarantouTree",
+      "description": "Garantou Family Tree",
+      "clientName": "Garantou",
+      "phone": "",
+      "icon": "./client/garantou/icon-192.png",
+      "url": "https://script.google.com/macros/s/AKfycbxEFX6OVmT4xQl6_ZxM8PNV0SuY-MYmIcBLFcivmt4swoi5epDfnIJFQ2xmQraJOxDO/exec",
+      "visible": true
     }
   ]
 }
