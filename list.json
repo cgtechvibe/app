@@ -100,6 +100,17 @@
       "icon": "./client/garantou/icon-192.png",
       "url": "https://script.google.com/macros/s/AKfycbxEFX6OVmT4xQl6_ZxM8PNV0SuY-MYmIcBLFcivmt4swoi5epDfnIJFQ2xmQraJOxDO/exec",
       "visible": true
+    },
+    {
+      "id": "gobou",
+      "path": "gobou",
+      "name": "Gobou FamTree",
+      "description": "Gobou Family Tree",
+      "clientName": "Gobou \\ Charles Gokin",
+      "phone": "01125816662",
+      "icon": "./client/gobou/icon-192.png",
+      "url": "https://script.google.com/macros/s/AKfycbz1zZ9PF0-OKYuOla0JKzOIk3OWoyK20HItb9MBe5KdRvfcTX855H6uAOxqsoAhj1w8Fg/exec",
+      "visible": true
     }
   ]
 }
