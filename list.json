@@ -93,10 +93,10 @@
     {
       "id": "garantou",
       "path": "garantou",
-      "name": "GarantouTree",
-      "description": "Garantou Family Tree",
-      "clientName": "Garantou",
-      "phone": "",
+      "name": "GulasagTree",
+      "description": "Gulasag Family Tree",
+      "clientName": "Charles Gokin",
+      "phone": "01125816662",
       "icon": "./client/garantou/icon-192.png",
       "url": "https://script.google.com/macros/s/AKfycbxEFX6OVmT4xQl6_ZxM8PNV0SuY-MYmIcBLFcivmt4swoi5epDfnIJFQ2xmQraJOxDO/exec",
       "visible": true
